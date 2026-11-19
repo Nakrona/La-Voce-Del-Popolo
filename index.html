@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Voce Del Popolo — Prototype</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-shell">
+        <!-- Top HUD Bar (Visible during gameplay) -->
+        <header id="hud-top" class="hud-top hidden">
+            <div class="hud-stat moral-box">
+                <span class="hud-label">Poin Moral</span>
+                <strong id="hud-moral" class="hud-value">20</strong>
+            </div>
+
+            <div id="unit-buttons" class="unit-bar">
+                <button class="unit-btn" data-unit="WIBU" title="Melee cepat &amp; murah">
+                    <span class="unit-name">Wibu</span>
+                    <span class="unit-cost">Cost: 10</span>
+                    <span class="unit-cd-bar"></span>
+                </button>
+                <button class="unit-btn" data-unit="SPANDUK" title="Tank garis depan HP tebal">
+                    <span class="unit-name">Spanduk</span>
+                    <span class="unit-cost">Cost: 25</span>
+                    <span class="unit-cd-bar"></span>
+                </button>
+                <button class="unit-btn" data-unit="MAHASISWA" title="Ranged pelempar kerikil">
+                    <span class="unit-name">Mahasiswa</span>
+                    <span class="unit-cost">Cost: 20</span>
+                    <span class="unit-cd-bar"></span>
+                </button>
+                <button class="unit-btn" data-unit="ORATOR" title="Support panggung: Buff seluruh unit">
+                    <span class="unit-name">Orator</span>
+                    <span class="unit-cost">Cost: 35</span>
+                    <span class="unit-cd-bar"></span>
+                </button>
+            </div>
+
+            <div class="hud-right">
+                <div class="hud-stat">
+                    <span class="hud-label">Stage</span>
+                    <strong id="hud-stage" class="hud-value">1/3</strong>
+                </div>
+                <div class="hud-stat">
+                    <span class="hud-label">Timer</span>
+                    <strong id="hud-timer" class="hud-value">00:40</strong>
+                </div>
+                <div class="hud-stat">
+                    <span class="hud-label">Skor</span>
+                    <strong id="hud-score" class="hud-value">0000</strong>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Viewport & Overlays -->
+        <main class="stage-viewport">
+            <canvas id="game-canvas" width="960" height="480"></canvas>
+
+            <!-- Edge Camera Hotspots (Click/Hold Left or Right Edge) -->
+            <button id="cam-left-btn" class="edge-cam-btn left hidden" aria-label="Geser Kamera Kiri">&lt;</button>
+            <button id="cam-right-btn" class="edge-cam-btn right hidden" aria-label="Geser Kamera Kanan">&gt;</button>
+
+            <!-- Time Scale Indicator Badge -->
+            <div id="timescale-badge" class="timescale-badge hidden">1.0x</div>
+
+            <!-- Start Screen Overlay -->
+            <section id="start-screen" class="overlay-screen">
+                <div class="overlay-card start-card">
+                    <p class="subtitle-tag">2D Line-Defense Prototype</p>
+                    <h1 class="game-title">LA VOCE DEL POPOLO</h1>
+                    <p class="game-tagline">
+                        Kerahkan massa aksi dari Panggung Utama dan robohkan Markas Polisi sebelum momentum habis!
+                    </p>
+                    <div class="menu-actions">
+                        <button id="btn-start" class="btn btn-primary">START</button>
+                        <button id="btn-howto" class="btn btn-secondary">Cara Bermain</button>
+                    </div>
+                    <div class="highscore-pill">
+                        High Score: <strong id="start-highscore">0000</strong>
+                    </div>
+                </div>
+            </section>
+
+            <!-- How To Play Modal -->
+            <section id="howto-screen" class="overlay-screen hidden">
+                <div class="overlay-card howto-card">
+                    <h2>Cara Bermain</h2>
+                    <ul class="howto-list">
+                        <li><strong>Tujuan:</strong> Hancurkan <strong>Markas Polisi (Kanan)</strong> sebelum Timer habis, dan jangan biarkan <strong>Panggung Utama (Kiri)</strong> roboh.</li>
+                        <li><strong>Spawn Unit:</strong> Klik tombol unit di atas (atau tombol <code>1</code>–<code>4</code>) memakai <strong>Poin Moral</strong> yang terisi otomatis.</li>
+                        <li><strong>Sistem Counter:</strong> <em>Spanduk</em> (Tank) melindungi <em>Mahasiswa</em> (Ranged); hindari spam <em>Wibu</em> saat <em>Gas Air Mata (AoE)</em> muncul; pakai <em>Orator</em> untuk buff global!</li>
+                        <li><strong>Kontrol Kamera:</strong> Tahan <code>A</code> / <code>D</code> (atau tombol panah / pinggir layar <code>&lt;</code> <code>&gt;</code>) untuk menggeser pandangan.</li>
+                        <li><strong>Manipulasi Waktu:</strong> Tahan <code>W</code> untuk <strong>Fast-Forward 2x</strong>, tahan <code>S</code> untuk <strong>Slow-Mo 0.5x</strong>.</li>
+                    </ul>
+                    <button id="btn-howto-close" class="btn btn-primary">Mengerti</button>
+                </div>
+            </section>
+
+            <!-- Victory / Game Over Screen -->
+            <section id="end-screen" class="overlay-screen hidden">
+                <div class="overlay-card end-card">
+                    <h2 id="end-title" class="end-title">VICTORY</h2>
+                    <p id="end-reason" class="end-reason">Markas Polisi berhasil diruntuhkan!</p>
+                    <div class="end-stats">
+                        <div><span>Skor Akhir:</span> <strong id="end-score">0000</strong></div>
+                        <div><span>High Score:</span> <strong id="end-highscore">0000</strong></div>
+                        <div><span>Sisa Waktu:</span> <strong id="end-time">00 detik</strong></div>
+                    </div>
+                    <div class="end-actions">
+                        <button id="btn-retry" class="btn btn-secondary">Retry</button>
+                        <button id="btn-next" class="btn btn-primary">Next Stage</button>
+                        <button id="btn-menu" class="btn btn-secondary">Menu Utama</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Bottom Control Hint Bar -->
+        <footer id="hud-bottom" class="hud-bottom hidden">
+            <span><strong>1–4 / Klik UI:</strong> Spawn Unit</span>
+            <span>|</span>
+            <span><strong>A / D:</strong> Geser Kamera</span>
+            <span>|</span>
+            <span><strong>W:</strong> Fast Forward 2x</span>
+            <span>|</span>
+            <span><strong>S:</strong> Slow-Mo 0.5x</span>
+        </footer>
+    </div>
+
+    <!-- Ordered OOP & SOLID Script Loading (Works on both file:// and HTTP/Vercel) -->
+    <script src="js/config/GameConfig.js"></script>
+    <script src="js/core/EventBus.js"></script>
+    <script src="js/core/StorageService.js"></script>
+    <script src="js/core/InputHandler.js"></script>
+    <script src="js/core/Camera.js"></script>
+    <script src="js/entities/Entity.js"></script>
+    <script src="js/entities/BaseStructure.js"></script>
+    <script src="js/entities/Projectile.js"></script>
+    <script src="js/entities/Unit.js"></script>
+    <script src="js/systems/UnitFactory.js"></script>
+    <script src="js/systems/ResourceManager.js"></script>
+    <script src="js/systems/EnemySpawnerAI.js"></script>
+    <script src="js/systems/CombatSystem.js"></script>
+    <script src="js/systems/Renderer.js"></script>
+    <script src="js/ui/UIManager.js"></script>
+    <script src="js/core/GameEngine.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
