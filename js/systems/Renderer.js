@@ -11,13 +11,20 @@ class Renderer {
         this._camera = camera;
     }
 
-    render(combatSystem) {
+    render(combatSystem, isSkillActive = false, hoveredEntity = null) {
         const ctx = this._ctx;
         const w = WORLD_CONFIG.VIEWPORT_WIDTH;
         const h = WORLD_CONFIG.VIEWPORT_HEIGHT;
         ctx.imageSmoothingEnabled = false;
 
-        this._drawEnvironment(ctx, w, h);
+        ctx.save();
+        if (combatSystem.screenShakeTimer > 0) {
+            const shakeX = (Math.random() - 0.5) * 6;
+            const shakeY = (Math.random() - 0.5) * 4;
+            ctx.translate(shakeX, shakeY);
+        }
+
+        this._drawEnvironment(ctx, w, h, isSkillActive);
 
         ctx.save();
         ctx.translate(-Math.round(this._camera.x), 0);
@@ -28,18 +35,39 @@ class Renderer {
         this._drawUnits(ctx, combatSystem.playerUnits);
         this._drawUnits(ctx, combatSystem.enemyUnits);
         this._drawProjectiles(ctx, combatSystem.projectiles);
+        this._drawSkyBombs(ctx, combatSystem.skyBombs);
         this._drawParticles(ctx, combatSystem.particles);
+        if (hoveredEntity && hoveredEntity.isAlive()) {
+            this._drawHoverHighlight(ctx, hoveredEntity);
+        }
 
         ctx.restore();
 
         this._drawOffscreenIndicator(ctx, combatSystem, w);
+        ctx.restore();
     }
 
-    _drawEnvironment(ctx, w, h) {
+    _drawHoverHighlight(ctx, entity) {
+        if (!this._camera.isVisible(entity.x, entity.width, 40)) return;
+        const pad = 4;
+        const left = entity.getLeftEdge() - pad;
+        const top = WORLD_CONFIG.GROUND_Y - entity.height - pad;
+        const w = entity.width + pad * 2;
+        const h = entity.height + pad * 2;
+
+        ctx.save();
+        ctx.strokeStyle = "#fbbf24";
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5, 3]);
+        ctx.strokeRect(left, top, w, h);
+        ctx.restore();
+    }
+
+    _drawEnvironment(ctx, w, h, isSkillActive = false) {
         // Sky gradient
         const grad = ctx.createLinearGradient(0, 0, 0, WORLD_CONFIG.GROUND_Y);
-        grad.addColorStop(0, "#1e293b");
-        grad.addColorStop(1, "#475569");
+        grad.addColorStop(0, isSkillActive ? "#451a03" : "#1e293b");
+        grad.addColorStop(1, isSkillActive ? "#7c2d12" : "#475569");
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, w, WORLD_CONFIG.GROUND_Y);
 
@@ -191,6 +219,47 @@ class Renderer {
             ctx.beginPath();
             ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
             ctx.fill();
+        }
+    }
+
+    _drawSkyBombs(ctx, skyBombs) {
+        for (let i = 0; i < skyBombs.length; i++) {
+            const b = skyBombs[i];
+            if (!this._camera.isVisible(b.x, 80, 120) && !this._camera.isVisible(b.targetX, 80, 120)) continue;
+
+            // Subtle target impact marker on the asphalt road
+            ctx.strokeStyle = b.variantType === "PETASAN"
+                ? "rgba(239, 68, 68, 0.45)"
+                : "rgba(56, 189, 248, 0.45)";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.ellipse(b.targetX, b.groundY + 6, 16, 5, 0, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Diagonal trail behind falling projectile
+            ctx.strokeStyle = b.accentColor;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(b.x, b.y);
+            ctx.lineTo(b.x - b.vx * 0.045, b.y - b.vy * 0.045);
+            ctx.stroke();
+
+            // Rotating Petasan or Botol body
+            ctx.save();
+            ctx.translate(b.x, b.y);
+            ctx.rotate(b.rotation);
+            if (b.variantType === "PETASAN") {
+                ctx.fillStyle = b.color;
+                ctx.fillRect(-5, -10, 10, 20);
+                ctx.fillStyle = "#fde047";
+                ctx.fillRect(-2, -14, 4, 4);
+            } else {
+                ctx.fillStyle = b.color;
+                ctx.fillRect(-5, -8, 10, 16);
+                ctx.fillStyle = b.accentColor;
+                ctx.fillRect(-3, -12, 6, 4);
+            }
+            ctx.restore();
         }
     }
 

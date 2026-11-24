@@ -1,0 +1,20 @@
+LA VOCE DEL POPOLO - AUDIO CREDITS & SOURCES (ALL VERIFIED CC0 PUBLIC DOMAIN)
+==============================================================================
+Sumber Terpercaya: OpenGameArt.org (Lisensi Creative Commons Zero 1.0 / CC0)
+Anda dapat mengganti file apa saja di folder ini dengan nama file yang sama,
+atau menggunakan tombol 'Kelola Audio' di dalam game untuk memilih folder lokal.
+
+- bgm_menu.mp3 : City Loop (OGA CC0) | CC0 | https://opengameart.org/content/city-loop-0
+- bgm_battle.mp3 : JRPG Epic Rock Battle Theme #1 (OGA CC0) | CC0 | https://opengameart.org/content/jrpg-epic-rock-battle-theme-1
+- amb_crowd.ogg : Crowd Shouting/Speaking Ambience (OGA CC0) | CC0 | https://opengameart.org/content/crowd-shoutingspeaking-ambience
+- sfx_ui_click.wav : Click (OGA CC0) | CC0 | https://opengameart.org/content/click
+- sfx_spawn.ogg : Bubbles Pop (OGA CC0) | CC0 | https://opengameart.org/content/bubbles-pop
+- sfx_orator.ogg : Power Up Sound Effects (OGA CC0) | CC0 | https://opengameart.org/content/power-up-sound-effects
+- sfx_teargas.ogg : Muffled Distant Explosion (OGA CC0) | CC0 | https://opengameart.org/content/muffled-distant-explosion
+- sfx_barracuda.mp3 : Sirens and Alarm Noise (OGA CC0) | CC0 | https://opengameart.org/content/sirens-and-alarm-noise
+- sfx_petasan.mp3 : Chunky Explosion (OGA CC0) | CC0 | https://opengameart.org/content/chunky-explosion
+- sfx_victory.mp3 : Victory Fanfare Short (OGA CC0) | CC0 | https://opengameart.org/content/victory-fanfare-short
+- sfx_gameover.mp3 : Game Over Theme (OGA CC0) | CC0 | https://opengameart.org/content/game-over-theme
+- sfx_hit_melee.ogg (impact.1.ogg) : 10 Impact/Shield Blocks by StarNinjas (OGA CC0) | CC0 | https://opengameart.org/content/10-impactshield-blocks
+- sfx_water_cannon.ogg (splash_01.ogg) : 40 CC0 Water Splash SFX (OGA CC0) | CC0 | https://opengameart.org/content/40-cc0-water-splash-slime-sfx
+- sfx_throw.wav (swishes/swish-1.wav) : Swishes Sound Pack (OGA CC0) | CC0 | https://opengameart.org/content/swishes-sound-pack

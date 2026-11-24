@@ -33,6 +33,16 @@ class InputHandler {
         else if (code === "Digit2") this._eventBus.emit("SPAWN_REQUEST", "SPANDUK");
         else if (code === "Digit3") this._eventBus.emit("SPAWN_REQUEST", "MAHASISWA");
         else if (code === "Digit4") this._eventBus.emit("SPAWN_REQUEST", "ORATOR");
+        else if (code === "Space") {
+            e.preventDefault();
+            if (!e.repeat) {
+                this._eventBus.emit("SKILL_REQUEST");
+            }
+        } else if (code === "Escape") {
+            if (!e.repeat) {
+                this._eventBus.emit("PAUSE_TOGGLE");
+            }
+        }
     }
 
     _onKeyUp(e) {

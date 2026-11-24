@@ -10,18 +10,38 @@ class CombatSystem {
         this.playerUnits = [];
         this.enemyUnits = [];
         this.projectiles = [];
+        this.skyBombs = [];
         this.particles = [];
         this.playerBase = null;
         this.enemyBase = null;
+        this.screenShakeTimer = 0;
     }
 
     reset(playerBase, enemyBase) {
         this.playerUnits = [];
         this.enemyUnits = [];
         this.projectiles = [];
+        this.skyBombs = [];
         this.particles = [];
         this.playerBase = playerBase;
         this.enemyBase = enemyBase;
+        this.screenShakeTimer = 0;
+    }
+
+    getEnemyUnits() {
+        return this.enemyUnits;
+    }
+
+    spawnSkyBomb(bomb) {
+        this.skyBombs.push(bomb);
+    }
+
+    notifyMeleeHit() {
+        this._eventBus.emit("MELEE_HIT");
+    }
+
+    notifyRangedShot() {
+        this._eventBus.emit("RANGED_SHOT");
     }
 
     canSpawnPlayerUnit(unitKey) {
@@ -76,12 +96,34 @@ class CombatSystem {
     }
 
     update(dtEff) {
+        if (this.screenShakeTimer > 0) {
+            this.screenShakeTimer = Math.max(0, this.screenShakeTimer - dtEff);
+        }
         this._applyOratorBuffs();
         this._updateUnitList(this.playerUnits, this.enemyUnits, this.enemyBase, dtEff);
         this._updateUnitList(this.enemyUnits, this.playerUnits, this.playerBase, dtEff);
         this._updateProjectiles(dtEff);
+        this._updateSkyBombs(dtEff);
         this._updateParticles(dtEff);
         this._cleanupDeadEntities();
+        this._emitCrowdDominance();
+    }
+
+    _emitCrowdDominance() {
+        const pCount = this.playerUnits.length;
+        const eCount = this.enemyUnits.length;
+        if (pCount + eCount === 0) {
+            this._eventBus.emit("CROWD_DOMINANCE", { ratio: 0.1 });
+            return;
+        }
+        let maxPlayerX = WORLD_CONFIG.PLAYER_BASE_X;
+        for (let i = 0; i < pCount; i++) {
+            if (this.playerUnits[i].x > maxPlayerX) maxPlayerX = this.playerUnits[i].x;
+        }
+        const span = WORLD_CONFIG.ENEMY_BASE_X - WORLD_CONFIG.PLAYER_BASE_X;
+        const pushRatio = span > 0 ? (maxPlayerX - WORLD_CONFIG.PLAYER_BASE_X) / span : 0;
+        const countRatio = pCount / (pCount + eCount);
+        this._eventBus.emit("CROWD_DOMINANCE", { ratio: (pushRatio * 0.6) + (countRatio * 0.4) });
     }
 
     _applyOratorBuffs() {
@@ -184,6 +226,8 @@ class CombatSystem {
 
         p.active = false;
         if (p.aoeRadius > 0) {
+            const impactKind = p.slowDuration > 0 ? "WATER" : "TEARGAS";
+            this._eventBus.emit("AOE_IMPACT", { kind: impactKind });
             this.spawnAoeCloud(p.x, WORLD_CONFIG.GROUND_Y - 26, p.color, p.aoeRadius);
             for (let i = 0; i < targets.length; i++) {
                 const t = targets[i];
@@ -200,6 +244,35 @@ class CombatSystem {
         } else {
             hitTarget.takeDamage(p.damage);
             this.spawnHitSpark(p.x, p.y, p.color, 10);
+        }
+    }
+
+    _updateSkyBombs(dtEff) {
+        for (let i = this.skyBombs.length - 1; i >= 0; i--) {
+            const bomb = this.skyBombs[i];
+            const impacted = bomb.update(dtEff);
+            if (!impacted) continue;
+
+            this._applySkyBombImpact(bomb);
+            this.skyBombs.splice(i, 1);
+        }
+    }
+
+    _applySkyBombImpact(bomb) {
+        this._eventBus.emit("AOE_IMPACT", { kind: "PETASAN" });
+        this.screenShakeTimer = 0.09;
+        this.spawnHitSpark(bomb.targetX, bomb.groundY - 8, bomb.accentColor, bomb.aoeRadius * 0.45);
+        this.spawnAoeCloud(bomb.targetX, bomb.groundY - 12, bomb.color, bomb.aoeRadius * 0.72);
+
+        for (let i = 0; i < this.enemyUnits.length; i++) {
+            const enemy = this.enemyUnits[i];
+            if (!enemy.isAlive()) continue;
+            if (Math.abs(enemy.x - bomb.targetX) <= bomb.aoeRadius) {
+                enemy.takeDamage(bomb.damage);
+                if (bomb.slowDuration > 0) {
+                    enemy.applySlow(bomb.slowFactor, bomb.slowDuration);
+                }
+            }
         }
     }
 

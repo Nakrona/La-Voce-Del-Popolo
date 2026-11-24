@@ -20,7 +20,10 @@ const WORLD_CONFIG = Object.freeze({
     MAX_MORAL: 150,
     MAX_UNITS_PER_FACTION: 35,
     TIME_BONUS_PER_SECOND: 25,
-    HIGH_SCORE_STORAGE_KEY: "lvdp_high_score"
+    HIGH_SCORE_STORAGE_KEY: "lvdp_high_score",
+    UNLOCKED_STAGE_STORAGE_KEY: "lvdp_unlocked_stage",
+    CLEARED_STAGES_STORAGE_KEY: "lvdp_cleared_stages",
+    AUDIO_SETTINGS_STORAGE_KEY: "lvdp_audio_settings"
 });
 
 const UNIT_CONFIGS = Object.freeze({
@@ -29,6 +32,8 @@ const UNIT_CONFIGS = Object.freeze({
         key: "WIBU",
         name: "Pendemo Wibu",
         shortLabel: "Wibu",
+        roleLabel: "Melee Dasar (Cepat & Murah)",
+        description: "Serangan melee sangat cepat dan murah. Kuat menahan Dalmas awal, tetapi rentan AoE Gas Air Mata.",
         faction: FACTIONS.PLAYER,
         behavior: "MELEE",
         cost: 10,
@@ -48,6 +53,8 @@ const UNIT_CONFIGS = Object.freeze({
         key: "SPANDUK",
         name: "Pendemo Spanduk",
         shortLabel: "Spanduk",
+        roleLabel: "Tank Garis Depan",
+        description: "HP sangat tebal & tahan 75% knockback Water Cannon. Melindungi barisan Mahasiswa di belakang.",
         faction: FACTIONS.PLAYER,
         behavior: "MELEE",
         cost: 25,
@@ -68,6 +75,8 @@ const UNIT_CONFIGS = Object.freeze({
         key: "MAHASISWA",
         name: "Pendemo Mahasiswa",
         shortLabel: "Mhs",
+        roleLabel: "Ranged DPS (Kerikil)",
+        description: "Melempar kerikil jarak jauh dari belakang Tank. Efektif menghancurkan Gas Air Mata & Barracuda.",
         faction: FACTIONS.PLAYER,
         behavior: "RANGED",
         cost: 20,
@@ -90,6 +99,8 @@ const UNIT_CONFIGS = Object.freeze({
         key: "ORATOR",
         name: "Orator Panggung",
         shortLabel: "Orator",
+        roleLabel: "Support Panggung (Global Buff)",
+        description: "Berorasi di Panggung Utama selama 16s: memberi +35% Atk Speed & +25% Move Speed (maks 2 stack).",
         faction: FACTIONS.PLAYER,
         behavior: "ORATOR",
         cost: 35,
@@ -115,6 +126,8 @@ const UNIT_CONFIGS = Object.freeze({
         key: "DALMAS",
         name: "Polisi Dalmas",
         shortLabel: "Dalmas",
+        roleLabel: "Melee Tameng Kokoh",
+        description: "Unit garis depan kepolisian penahan dorongan massa.",
         faction: FACTIONS.ENEMY,
         behavior: "MELEE",
         maxHp: 160,
@@ -132,6 +145,8 @@ const UNIT_CONFIGS = Object.freeze({
         key: "GAS_AIR_MATA",
         name: "Polisi Gas Air Mata",
         shortLabel: "Gas",
+        roleLabel: "Ranged Area (AoE)",
+        description: "Menembak tabung gas air mata AoE (radius 95 px) yang melukai gerombolan pendemo sekaligus.",
         faction: FACTIONS.ENEMY,
         behavior: "RANGED",
         maxHp: 110,
@@ -152,6 +167,8 @@ const UNIT_CONFIGS = Object.freeze({
         key: "WATER_CANNON",
         name: "Polisi Water Cannon",
         shortLabel: "Water",
+        roleLabel: "Support Penahan Laju",
+        description: "Semburan air AoE jarak jauh yang memberi Slow -25% & Knockback ringan.",
         faction: FACTIONS.ENEMY,
         behavior: "WATER_CANNON",
         maxHp: 300,
@@ -175,6 +192,8 @@ const UNIT_CONFIGS = Object.freeze({
         key: "BARRACUDA",
         name: "Mobil Barracuda",
         shortLabel: "BOSS",
+        roleLabel: "Armored Tank / Boss",
+        description: "Kendaraan lapis baja kebal knockback dengan 1.5x damage terhadap Panggung Utama.",
         faction: FACTIONS.ENEMY,
         behavior: "BOSS",
         maxHp: 520,
@@ -258,3 +277,39 @@ const STAGE_CONFIGS = Object.freeze([
         emergencyWave: { hpThresholdRatio: 0.4, unit: "DALMAS", count: 2 }
     }
 ]);
+
+const SKILL_CONFIGS = Object.freeze({
+    PETASAN_BOTOL_RAIN: {
+        key: "PETASAN_BOTOL_RAIN",
+        name: "Hujan Petasan",
+        description: "Menghujani barisan polisi dengan petasan dan botol dari langit.",
+        cooldown: 16.0,
+        initialCooldown: 0.0,
+        duration: 3.6,
+        spawnInterval: 0.24,
+        variants: [
+            {
+                type: "PETASAN",
+                damage: 28,
+                aoeRadius: 72,
+                fallSpeed: 700,
+                driftX: 110,
+                color: "#ef4444",
+                accentColor: "#fde047",
+                slowFactor: 1.0,
+                slowDuration: 0
+            },
+            {
+                type: "BOTOL",
+                damage: 18,
+                aoeRadius: 62,
+                fallSpeed: 640,
+                driftX: 90,
+                color: "#38bdf8",
+                accentColor: "#e0f2fe",
+                slowFactor: 0.75,
+                slowDuration: 1.0
+            }
+        ]
+    }
+});

@@ -38,6 +38,12 @@
                 </button>
             </div>
 
+            <button id="btn-special-skill" class="skill-btn is-ready" title="Skill Aktif [Space]: Hujan Petasan &amp; Botol">
+                <span class="skill-name">Hujan Petasan</span>
+                <span id="skill-status" class="skill-status">SIAP [SPACE]</span>
+                <span id="skill-cd-bar" class="skill-cd-bar"></span>
+            </button>
+
             <div class="hud-right">
                 <div class="hud-stat">
                     <span class="hud-label">Stage</span>
@@ -51,6 +57,8 @@
                     <span class="hud-label">Skor</span>
                     <strong id="hud-score" class="hud-value">0000</strong>
                 </div>
+                <button id="btn-mute-toggle" class="hud-icon-btn" title="Mute / Unmute Audio">🔊</button>
+                <button id="btn-hud-pause" class="hud-icon-btn" title="Pause Game [ESC]">⏸</button>
             </div>
         </header>
 
@@ -74,11 +82,25 @@
                         Kerahkan massa aksi dari Panggung Utama dan robohkan Markas Polisi sebelum momentum habis!
                     </p>
                     <div class="menu-actions">
-                        <button id="btn-start" class="btn btn-primary">START</button>
+                        <button id="btn-start" class="btn btn-primary">PLAY</button>
                         <button id="btn-howto" class="btn btn-secondary">Cara Bermain</button>
+                        <button id="btn-menu-audio" class="btn btn-secondary">Settings Audio</button>
                     </div>
                     <div class="highscore-pill">
                         High Score: <strong id="start-highscore">0000</strong>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Stage Selection Screen -->
+            <section id="stage-select-screen" class="overlay-screen hidden">
+                <div class="overlay-card stage-select-card">
+                    <h2>Pilih Stage</h2>
+                    <p class="stage-select-sub">Taklukkan stage secara berurutan. Progres tersimpan otomatis.</p>
+                    <div id="stage-grid" class="stage-grid"></div>
+                    <div class="stage-select-actions">
+                        <button id="btn-stage-back" class="btn btn-secondary">Kembali</button>
+                        <button id="btn-reset-progress" class="btn btn-danger-subtle">Reset Progres</button>
                     </div>
                 </div>
             </section>
@@ -90,11 +112,53 @@
                     <ul class="howto-list">
                         <li><strong>Tujuan:</strong> Hancurkan <strong>Markas Polisi (Kanan)</strong> sebelum Timer habis, dan jangan biarkan <strong>Panggung Utama (Kiri)</strong> roboh.</li>
                         <li><strong>Spawn Unit:</strong> Klik tombol unit di atas (atau tombol <code>1</code>–<code>4</code>) memakai <strong>Poin Moral</strong> yang terisi otomatis.</li>
+                        <li><strong>Skill Aktif [Space]:</strong> Aktifkan <strong>Hujan Petasan &amp; Botol</strong> untuk menghujani barisan polisi dari langit (cooldown 16 detik).</li>
                         <li><strong>Sistem Counter:</strong> <em>Spanduk</em> (Tank) melindungi <em>Mahasiswa</em> (Ranged); hindari spam <em>Wibu</em> saat <em>Gas Air Mata (AoE)</em> muncul; pakai <em>Orator</em> untuk buff global!</li>
-                        <li><strong>Kontrol Kamera:</strong> Tahan <code>A</code> / <code>D</code> (atau tombol panah / pinggir layar <code>&lt;</code> <code>&gt;</code>) untuk menggeser pandangan.</li>
-                        <li><strong>Manipulasi Waktu:</strong> Tahan <code>W</code> untuk <strong>Fast-Forward 2x</strong>, tahan <code>S</code> untuk <strong>Slow-Mo 0.5x</strong>.</li>
+                        <li><strong>Kontrol Kamera &amp; Waktu:</strong> Tahan <code>A</code>/<code>D</code> geser kamera, <code>W</code> Fast-Forward 2x, <code>S</code> Slow-Mo 0.5x, dan <code>ESC</code> untuk Pause.</li>
                     </ul>
                     <button id="btn-howto-close" class="btn btn-primary">Mengerti</button>
+                </div>
+            </section>
+
+            <!-- Pause Screen Overlay -->
+            <section id="pause-screen" class="overlay-screen hidden">
+                <div class="overlay-card pause-card">
+                    <p class="subtitle-tag">Permainan Dijeda</p>
+                    <h2 class="pause-title">PAUSE</h2>
+                    <div class="pause-actions">
+                        <button id="btn-pause-resume" class="btn btn-primary">Lanjutkan [ESC]</button>
+                        <button id="btn-pause-audio" class="btn btn-secondary">Settings Audio</button>
+                        <button id="btn-pause-retry" class="btn btn-secondary">Ulangi Stage</button>
+                        <button id="btn-pause-menu" class="btn btn-secondary">Menu Utama</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Audio Settings Modal (Music & SFX Volume Sliders) -->
+            <section id="audio-settings-screen" class="overlay-screen hidden">
+                <div class="overlay-card audio-settings-card">
+                    <h2>Settings Audio</h2>
+                    <div class="audio-sliders">
+                        <div class="slider-group">
+                            <div class="slider-header">
+                                <label for="slider-bgm-vol">Volume Musik (BGM)</label>
+                                <strong id="val-bgm-vol">100%</strong>
+                            </div>
+                            <input id="slider-bgm-vol" class="audio-range" type="range" min="0" max="100" value="100">
+                        </div>
+                        <div class="slider-group">
+                            <div class="slider-header">
+                                <label for="slider-sfx-vol">Volume Efek Suara (SFX)</label>
+                                <strong id="val-sfx-vol">100%</strong>
+                            </div>
+                            <input id="slider-sfx-vol" class="audio-range" type="range" min="0" max="100" value="100">
+                        </div>
+                    </div>
+                    <div class="audio-settings-actions">
+                        <button id="btn-audio-mute-modal" class="btn btn-secondary">Audio: ON</button>
+                        <button id="btn-audio-reset" class="btn btn-secondary">Reset Default</button>
+                        <button id="btn-audio-close" class="btn btn-primary">Kembali</button>
+                    </div>
                 </div>
             </section>
 
@@ -121,29 +185,59 @@
         <footer id="hud-bottom" class="hud-bottom hidden">
             <span><strong>1–4 / Klik UI:</strong> Spawn Unit</span>
             <span>|</span>
+            <span><strong>Space:</strong> Hujan Petasan</span>
+            <span>|</span>
+            <span><strong>Hover Unit/Shop:</strong> Cek Stats</span>
+            <span>|</span>
             <span><strong>A / D:</strong> Geser Kamera</span>
             <span>|</span>
             <span><strong>W:</strong> Fast Forward 2x</span>
             <span>|</span>
             <span><strong>S:</strong> Slow-Mo 0.5x</span>
+            <span>|</span>
+            <span><strong>ESC:</strong> Pause</span>
         </footer>
+    </div>
+
+    <!-- Shared Floating Tooltip (Battlefield Entities & Shop Buttons) -->
+    <div id="game-tooltip" class="game-tooltip hidden" role="status" aria-live="polite">
+        <div class="tt-header">
+            <div>
+                <div class="tt-title">Unit Name</div>
+                <div class="tt-subtitle">Role</div>
+            </div>
+            <span class="tt-badge">STATUS</span>
+        </div>
+        <div class="tt-hp-wrap hidden">
+            <div class="tt-hp-bar"><div class="tt-hp-fill"></div></div>
+            <span class="tt-hp-text">100 / 100 HP</span>
+        </div>
+        <div class="tt-stats"></div>
+        <div class="tt-note"></div>
     </div>
 
     <!-- Ordered OOP & SOLID Script Loading (Works on both file:// and HTTP/Vercel) -->
     <script src="js/config/GameConfig.js"></script>
+    <script src="js/config/SoundConfig.js"></script>
     <script src="js/core/EventBus.js"></script>
+    <script src="js/core/StateMachine.js"></script>
     <script src="js/core/StorageService.js"></script>
     <script src="js/core/InputHandler.js"></script>
     <script src="js/core/Camera.js"></script>
     <script src="js/entities/Entity.js"></script>
     <script src="js/entities/BaseStructure.js"></script>
     <script src="js/entities/Projectile.js"></script>
+    <script src="js/entities/FallingBomb.js"></script>
     <script src="js/entities/Unit.js"></script>
     <script src="js/systems/UnitFactory.js"></script>
     <script src="js/systems/ResourceManager.js"></script>
+    <script src="js/systems/ActiveSkill.js"></script>
+    <script src="js/systems/SkillManager.js"></script>
+    <script src="js/systems/AudioService.js"></script>
     <script src="js/systems/EnemySpawnerAI.js"></script>
     <script src="js/systems/CombatSystem.js"></script>
     <script src="js/systems/Renderer.js"></script>
+    <script src="js/ui/TooltipSystem.js"></script>
     <script src="js/ui/UIManager.js"></script>
     <script src="js/core/GameEngine.js"></script>
     <script src="js/main.js"></script>
