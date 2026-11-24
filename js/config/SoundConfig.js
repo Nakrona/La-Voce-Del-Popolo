@@ -10,6 +10,7 @@ const AUDIO_BASE_FOLDER = "assets/audio/";
 const SOUND_IDS = Object.freeze({
     BGM_MENU: "BGM_MENU",
     BGM_BATTLE: "BGM_BATTLE",
+    BGM_BATTLE_2: "BGM_BATTLE_2",
     AMB_CROWD: "AMB_CROWD",
     SFX_UI_CLICK: "SFX_UI_CLICK",
     SFX_SPAWN: "SFX_SPAWN",
@@ -21,7 +22,15 @@ const SOUND_IDS = Object.freeze({
     SFX_BARRACUDA: "SFX_BARRACUDA",
     SFX_PETASAN: "SFX_PETASAN",
     SFX_VICTORY: "SFX_VICTORY",
-    SFX_GAMEOVER: "SFX_GAMEOVER"
+    SFX_GAMEOVER: "SFX_GAMEOVER",
+    SFX_SHOP_BUY: "SFX_SHOP_BUY",
+    SFX_SHOP_EQUIP: "SFX_SHOP_EQUIP",
+    SFX_SHOP_UNEQUIP: "SFX_SHOP_UNEQUIP",
+    SFX_SHOP_ERROR: "SFX_SHOP_ERROR",
+    SFX_HEAL: "SFX_HEAL",
+    SFX_BUFF_DRUM: "SFX_BUFF_DRUM",
+    SFX_BUFF_RADIO: "SFX_BUFF_RADIO",
+    SFX_SONIC: "SFX_SONIC"
 });
 
 const SOUND_MANIFEST = Object.freeze({
@@ -37,12 +46,22 @@ const SOUND_MANIFEST = Object.freeze({
     },
     [SOUND_IDS.BGM_BATTLE]: {
         id: SOUND_IDS.BGM_BATTLE,
-        label: "BGM Pertempuran",
+        label: "BGM Pertempuran 1",
         category: "BGM",
         file: "bgm_battle.mp3",
         aliases: ["bgm_battle", "battle", "combat"],
-        volume: 0.35,
-        loop: true,
+        volume: 0.70,
+        loop: false,
+        minIntervalMs: 0
+    },
+    [SOUND_IDS.BGM_BATTLE_2]: {
+        id: SOUND_IDS.BGM_BATTLE_2,
+        label: "BGM Pertempuran 2",
+        category: "BGM",
+        file: "bgm_battle2.mp3",
+        aliases: ["bgm_battle2", "battle2"],
+        volume: 0.70,
+        loop: false,
         minIntervalMs: 0
     },
     [SOUND_IDS.AMB_CROWD]: {
@@ -164,5 +183,90 @@ const SOUND_MANIFEST = Object.freeze({
         volume: 0.6,
         loop: false,
         minIntervalMs: 200
+    },
+    [SOUND_IDS.SFX_SHOP_BUY]: {
+        id: SOUND_IDS.SFX_SHOP_BUY,
+        label: "SFX Beli Unit Shop",
+        category: "SFX",
+        file: "sfx_shop_buy.wav",
+        aliases: ["sfx_shop_buy", "buy", "coin", "purchase"],
+        volume: 0.6,
+        loop: false,
+        minIntervalMs: 80
+    },
+    [SOUND_IDS.SFX_SHOP_EQUIP]: {
+        id: SOUND_IDS.SFX_SHOP_EQUIP,
+        label: "SFX Pasang Unit ke Slot",
+        category: "SFX",
+        file: "sfx_shop_equip.wav",
+        aliases: ["sfx_shop_equip", "equip"],
+        volume: 0.55,
+        loop: false,
+        minIntervalMs: 60
+    },
+    [SOUND_IDS.SFX_SHOP_UNEQUIP]: {
+        id: SOUND_IDS.SFX_SHOP_UNEQUIP,
+        label: "SFX Lepas Unit dari Slot",
+        category: "SFX",
+        file: "sfx_shop_unequip.wav",
+        aliases: ["sfx_shop_unequip", "unequip"],
+        volume: 0.5,
+        loop: false,
+        minIntervalMs: 60
+    },
+    [SOUND_IDS.SFX_SHOP_ERROR]: {
+        id: SOUND_IDS.SFX_SHOP_ERROR,
+        label: "SFX Peringatan Shop / Slot Penuh",
+        category: "SFX",
+        file: "sfx_shop_error.wav",
+        aliases: ["sfx_shop_error", "error", "buzz"],
+        volume: 0.5,
+        loop: false,
+        minIntervalMs: 120
+    },
+    [SOUND_IDS.SFX_HEAL]: {
+        id: SOUND_IDS.SFX_HEAL,
+        label: "SFX Penyembuhan Tim Medis",
+        category: "SFX",
+        file: "sfx_heal.wav",
+        aliases: ["sfx_heal", "heal", "medic"],
+        volume: 0.5,
+        loop: false,
+        minIntervalMs: 220
+    },
+    [SOUND_IDS.SFX_BUFF_DRUM]: {
+        id: SOUND_IDS.SFX_BUFF_DRUM,
+        label: "SFX Genderang Dirigen Perkusi",
+        category: "SFX",
+        file: "sfx_buff_drum.wav",
+        aliases: ["sfx_buff_drum", "drum", "percussion"],
+        volume: 0.65,
+        loop: false,
+        minIntervalMs: 300
+    },
+    [SOUND_IDS.SFX_BUFF_RADIO]: {
+        id: SOUND_IDS.SFX_BUFF_RADIO,
+        label: "SFX Radio Komando Korlap",
+        category: "SFX",
+        file: "sfx_buff_radio.wav",
+        aliases: ["sfx_buff_radio", "radio", "korlap"],
+        volume: 0.55,
+        loop: false,
+        minIntervalMs: 300
+    },
+    [SOUND_IDS.SFX_SONIC]: {
+        id: SOUND_IDS.SFX_SONIC,
+        label: "SFX Gelombang Suara & Bom Cat",
+        category: "SFX",
+        file: "sfx_sonic.wav",
+        aliases: ["sfx_sonic", "sonic", "bass", "mural"],
+        volume: 0.5,
+        loop: false,
+        minIntervalMs: 140
     }
 });
+
+const BATTLE_BGM_PLAYLIST = Object.freeze([
+    SOUND_IDS.BGM_BATTLE,
+    SOUND_IDS.BGM_BATTLE_2
+]);

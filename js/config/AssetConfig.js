@@ -1,0 +1,172 @@
+"use strict";
+
+/**
+ * Centralized image asset configuration and folder manifest.
+ * Replace any image inside `assets/images/` with the same filename, OR replace a `.png`
+ * with an animated `.gif` of the same name (or update `file` here) without modifying engine code (OCP).
+ */
+const IMAGE_BASE_FOLDER = "assets/images/";
+
+const SUPPORTED_IMAGE_EXTENSIONS = Object.freeze([".png", ".gif", ".webp", ".jpg", ".svg"]);
+
+const ASSET_IDS = Object.freeze({
+    UI_KEY_ART: "UI_KEY_ART",
+    UI_ICON_WIBU: "UI_ICON_WIBU",
+    UI_ICON_SPANDUK: "UI_ICON_SPANDUK",
+    UI_ICON_MAHASISWA: "UI_ICON_MAHASISWA",
+    UI_ICON_ORATOR: "UI_ICON_ORATOR",
+    UI_ICON_PETASAN: "UI_ICON_PETASAN",
+    UI_ICON_OJEK_ONLINE: "UI_ICON_OJEK_ONLINE",
+    UI_ICON_PUNK_ROCK: "UI_ICON_PUNK_ROCK",
+    UI_ICON_BURUH_PABRIK: "UI_ICON_BURUH_PABRIK",
+    UI_ICON_PERS_KAMERA: "UI_ICON_PERS_KAMERA",
+    UI_ICON_DOKTER_RELAWAN: "UI_ICON_DOKTER_RELAWAN",
+    UI_ICON_SENIMAN_MURAL: "UI_ICON_SENIMAN_MURAL",
+    UI_ICON_MOBIL_KOMANDO: "UI_ICON_MOBIL_KOMANDO",
+    UI_ICON_KONDUKTOR_AKSI: "UI_ICON_KONDUKTOR_AKSI",
+    UI_ICON_KOORDINATOR_LAPANGAN: "UI_ICON_KOORDINATOR_LAPANGAN",
+
+    UNIT_WIBU: "UNIT_WIBU",
+    UNIT_SPANDUK: "UNIT_SPANDUK",
+    UNIT_MAHASISWA: "UNIT_MAHASISWA",
+    UNIT_ORATOR: "UNIT_ORATOR",
+    UNIT_OJEK_ONLINE: "UNIT_OJEK_ONLINE",
+    UNIT_PUNK_ROCK: "UNIT_PUNK_ROCK",
+    UNIT_BURUH_PABRIK: "UNIT_BURUH_PABRIK",
+    UNIT_PERS_KAMERA: "UNIT_PERS_KAMERA",
+    UNIT_DOKTER_RELAWAN: "UNIT_DOKTER_RELAWAN",
+    UNIT_SENIMAN_MURAL: "UNIT_SENIMAN_MURAL",
+    UNIT_MOBIL_KOMANDO: "UNIT_MOBIL_KOMANDO",
+    UNIT_KONDUKTOR_AKSI: "UNIT_KONDUKTOR_AKSI",
+    UNIT_KOORDINATOR_LAPANGAN: "UNIT_KOORDINATOR_LAPANGAN",
+    UNIT_DALMAS: "UNIT_DALMAS",
+    UNIT_GAS_AIR_MATA: "UNIT_GAS_AIR_MATA",
+    UNIT_WATER_CANNON: "UNIT_WATER_CANNON",
+    UNIT_BARRACUDA: "UNIT_BARRACUDA",
+    UNIT_BRIMOB: "UNIT_BRIMOB",
+    UNIT_TENTARA: "UNIT_TENTARA",
+    UNIT_TANK_ANOA: "UNIT_TANK_ANOA",
+
+    BASE_PANGGUNG: "BASE_PANGGUNG",
+    BASE_MARKAS: "BASE_MARKAS",
+    BASE_BUNDARAN_HI: "BASE_BUNDARAN_HI",
+    BASE_MABES_POLRI: "BASE_MABES_POLRI",
+    BASE_GEDUNG_DPR: "BASE_GEDUNG_DPR",
+
+    PROJ_KERIKIL: "PROJ_KERIKIL",
+    PROJ_TABUNG_GAS: "PROJ_TABUNG_GAS",
+    PROJ_SEMBURAN_AIR: "PROJ_SEMBURAN_AIR",
+    PROJ_PETASAN: "PROJ_PETASAN",
+    PROJ_BOTOL: "PROJ_BOTOL",
+    PROJ_PELURU: "PROJ_PELURU",
+    PROJ_MERIAM: "PROJ_MERIAM",
+    PROJ_FLASH: "PROJ_FLASH",
+    PROJ_CAT: "PROJ_CAT",
+    PROJ_SONIC: "PROJ_SONIC",
+
+    ENV_BG_CITY: "ENV_BG_CITY",
+    ENV_ROAD: "ENV_ROAD"
+});
+
+const IMAGE_MANIFEST = Object.freeze({
+    [ASSET_IDS.UI_KEY_ART]: { id: ASSET_IDS.UI_KEY_ART, file: "ui/key_art.png" },
+    [ASSET_IDS.UI_ICON_WIBU]: { id: ASSET_IDS.UI_ICON_WIBU, file: "ui/icon_wibu.png" },
+    [ASSET_IDS.UI_ICON_SPANDUK]: { id: ASSET_IDS.UI_ICON_SPANDUK, file: "ui/icon_spanduk.png" },
+    [ASSET_IDS.UI_ICON_MAHASISWA]: { id: ASSET_IDS.UI_ICON_MAHASISWA, file: "ui/icon_mahasiswa.png" },
+    [ASSET_IDS.UI_ICON_ORATOR]: { id: ASSET_IDS.UI_ICON_ORATOR, file: "ui/icon_orator.png" },
+    [ASSET_IDS.UI_ICON_PETASAN]: { id: ASSET_IDS.UI_ICON_PETASAN, file: "ui/icon_petasan.png" },
+    [ASSET_IDS.UI_ICON_OJEK_ONLINE]: { id: ASSET_IDS.UI_ICON_OJEK_ONLINE, file: "ui/icon_ojek_online.png" },
+    [ASSET_IDS.UI_ICON_PUNK_ROCK]: { id: ASSET_IDS.UI_ICON_PUNK_ROCK, file: "ui/icon_punk_rock.png" },
+    [ASSET_IDS.UI_ICON_BURUH_PABRIK]: { id: ASSET_IDS.UI_ICON_BURUH_PABRIK, file: "ui/icon_buruh_pabrik.png" },
+    [ASSET_IDS.UI_ICON_PERS_KAMERA]: { id: ASSET_IDS.UI_ICON_PERS_KAMERA, file: "ui/icon_pers_kamera.png" },
+    [ASSET_IDS.UI_ICON_DOKTER_RELAWAN]: { id: ASSET_IDS.UI_ICON_DOKTER_RELAWAN, file: "ui/icon_dokter_relawan.png" },
+    [ASSET_IDS.UI_ICON_SENIMAN_MURAL]: { id: ASSET_IDS.UI_ICON_SENIMAN_MURAL, file: "ui/icon_seniman_mural.png" },
+    [ASSET_IDS.UI_ICON_MOBIL_KOMANDO]: { id: ASSET_IDS.UI_ICON_MOBIL_KOMANDO, file: "ui/icon_mobil_komando.png" },
+    [ASSET_IDS.UI_ICON_KONDUKTOR_AKSI]: { id: ASSET_IDS.UI_ICON_KONDUKTOR_AKSI, file: "ui/icon_konduktor_aksi.png" },
+    [ASSET_IDS.UI_ICON_KOORDINATOR_LAPANGAN]: { id: ASSET_IDS.UI_ICON_KOORDINATOR_LAPANGAN, file: "ui/icon_koordinator_lapangan.png" },
+
+    [ASSET_IDS.UNIT_WIBU]: { id: ASSET_IDS.UNIT_WIBU, file: "units/wibu.png" },
+    [ASSET_IDS.UNIT_SPANDUK]: { id: ASSET_IDS.UNIT_SPANDUK, file: "units/spanduk.png" },
+    [ASSET_IDS.UNIT_MAHASISWA]: { id: ASSET_IDS.UNIT_MAHASISWA, file: "units/mahasiswa.png" },
+    [ASSET_IDS.UNIT_ORATOR]: { id: ASSET_IDS.UNIT_ORATOR, file: "units/orator.png" },
+    [ASSET_IDS.UNIT_OJEK_ONLINE]: { id: ASSET_IDS.UNIT_OJEK_ONLINE, file: "units/ojek_online.png" },
+    [ASSET_IDS.UNIT_PUNK_ROCK]: { id: ASSET_IDS.UNIT_PUNK_ROCK, file: "units/punk_rock.png" },
+    [ASSET_IDS.UNIT_BURUH_PABRIK]: { id: ASSET_IDS.UNIT_BURUH_PABRIK, file: "units/buruh_pabrik.png" },
+    [ASSET_IDS.UNIT_PERS_KAMERA]: { id: ASSET_IDS.UNIT_PERS_KAMERA, file: "units/pers_kamera.png" },
+    [ASSET_IDS.UNIT_DOKTER_RELAWAN]: { id: ASSET_IDS.UNIT_DOKTER_RELAWAN, file: "units/dokter_relawan.png" },
+    [ASSET_IDS.UNIT_SENIMAN_MURAL]: { id: ASSET_IDS.UNIT_SENIMAN_MURAL, file: "units/seniman_mural.png" },
+    [ASSET_IDS.UNIT_MOBIL_KOMANDO]: { id: ASSET_IDS.UNIT_MOBIL_KOMANDO, file: "units/mobil_komando.png" },
+    [ASSET_IDS.UNIT_KONDUKTOR_AKSI]: { id: ASSET_IDS.UNIT_KONDUKTOR_AKSI, file: "units/konduktor_aksi.png" },
+    [ASSET_IDS.UNIT_KOORDINATOR_LAPANGAN]: { id: ASSET_IDS.UNIT_KOORDINATOR_LAPANGAN, file: "units/koordinator_lapangan.png" },
+    [ASSET_IDS.UNIT_DALMAS]: { id: ASSET_IDS.UNIT_DALMAS, file: "units/dalmas.png" },
+    [ASSET_IDS.UNIT_GAS_AIR_MATA]: { id: ASSET_IDS.UNIT_GAS_AIR_MATA, file: "units/gas_air_mata.png" },
+    [ASSET_IDS.UNIT_WATER_CANNON]: { id: ASSET_IDS.UNIT_WATER_CANNON, file: "units/water_cannon.png" },
+    [ASSET_IDS.UNIT_BARRACUDA]: { id: ASSET_IDS.UNIT_BARRACUDA, file: "units/barracuda.png" },
+    [ASSET_IDS.UNIT_BRIMOB]: { id: ASSET_IDS.UNIT_BRIMOB, file: "units/brimob.png" },
+    [ASSET_IDS.UNIT_TENTARA]: { id: ASSET_IDS.UNIT_TENTARA, file: "units/tentara.png" },
+    [ASSET_IDS.UNIT_TANK_ANOA]: { id: ASSET_IDS.UNIT_TANK_ANOA, file: "units/tank_anoa.png" },
+
+    [ASSET_IDS.BASE_PANGGUNG]: { id: ASSET_IDS.BASE_PANGGUNG, file: "bases/panggung_utama.png" },
+    [ASSET_IDS.BASE_MARKAS]: { id: ASSET_IDS.BASE_MARKAS, file: "bases/markas_polisi.png" },
+    [ASSET_IDS.BASE_BUNDARAN_HI]: { id: ASSET_IDS.BASE_BUNDARAN_HI, file: "bases/bundaran_hi.png" },
+    [ASSET_IDS.BASE_MABES_POLRI]: { id: ASSET_IDS.BASE_MABES_POLRI, file: "bases/mabes_polri.png" },
+    [ASSET_IDS.BASE_GEDUNG_DPR]: { id: ASSET_IDS.BASE_GEDUNG_DPR, file: "bases/gedung_dpr.png" },
+
+    [ASSET_IDS.PROJ_KERIKIL]: { id: ASSET_IDS.PROJ_KERIKIL, file: "projectiles/kerikil.png" },
+    [ASSET_IDS.PROJ_TABUNG_GAS]: { id: ASSET_IDS.PROJ_TABUNG_GAS, file: "projectiles/tabung_gas.png" },
+    [ASSET_IDS.PROJ_SEMBURAN_AIR]: { id: ASSET_IDS.PROJ_SEMBURAN_AIR, file: "projectiles/semburan_air.png" },
+    [ASSET_IDS.PROJ_PETASAN]: { id: ASSET_IDS.PROJ_PETASAN, file: "projectiles/petasan.png" },
+    [ASSET_IDS.PROJ_BOTOL]: { id: ASSET_IDS.PROJ_BOTOL, file: "projectiles/botol.png" },
+    [ASSET_IDS.PROJ_PELURU]: { id: ASSET_IDS.PROJ_PELURU, file: "projectiles/peluru.png" },
+    [ASSET_IDS.PROJ_MERIAM]: { id: ASSET_IDS.PROJ_MERIAM, file: "projectiles/meriam.png" },
+    [ASSET_IDS.PROJ_FLASH]: { id: ASSET_IDS.PROJ_FLASH, file: "projectiles/flash.png" },
+    [ASSET_IDS.PROJ_CAT]: { id: ASSET_IDS.PROJ_CAT, file: "projectiles/cat.png" },
+    [ASSET_IDS.PROJ_SONIC]: { id: ASSET_IDS.PROJ_SONIC, file: "projectiles/sonic.png" },
+
+    [ASSET_IDS.ENV_BG_CITY]: { id: ASSET_IDS.ENV_BG_CITY, file: "environment/bg_city.png" },
+    [ASSET_IDS.ENV_ROAD]: { id: ASSET_IDS.ENV_ROAD, file: "environment/road.png" }
+});
+
+const UNIT_KEY_TO_ASSET_ID = Object.freeze({
+    WIBU: ASSET_IDS.UNIT_WIBU,
+    SPANDUK: ASSET_IDS.UNIT_SPANDUK,
+    MAHASISWA: ASSET_IDS.UNIT_MAHASISWA,
+    ORATOR: ASSET_IDS.UNIT_ORATOR,
+    OJEK_ONLINE: ASSET_IDS.UNIT_OJEK_ONLINE,
+    PUNK_ROCK: ASSET_IDS.UNIT_PUNK_ROCK,
+    BURUH_PABRIK: ASSET_IDS.UNIT_BURUH_PABRIK,
+    PERS_KAMERA: ASSET_IDS.UNIT_PERS_KAMERA,
+    DOKTER_RELAWAN: ASSET_IDS.UNIT_DOKTER_RELAWAN,
+    SENIMAN_MURAL: ASSET_IDS.UNIT_SENIMAN_MURAL,
+    MOBIL_KOMANDO: ASSET_IDS.UNIT_MOBIL_KOMANDO,
+    KONDUKTOR_AKSI: ASSET_IDS.UNIT_KONDUKTOR_AKSI,
+    KOORDINATOR_LAPANGAN: ASSET_IDS.UNIT_KOORDINATOR_LAPANGAN,
+    DALMAS: ASSET_IDS.UNIT_DALMAS,
+    GAS_AIR_MATA: ASSET_IDS.UNIT_GAS_AIR_MATA,
+    WATER_CANNON: ASSET_IDS.UNIT_WATER_CANNON,
+    BARRACUDA: ASSET_IDS.UNIT_BARRACUDA,
+    BRIMOB: ASSET_IDS.UNIT_BRIMOB,
+    TENTARA: ASSET_IDS.UNIT_TENTARA,
+    TANK_ANOA: ASSET_IDS.UNIT_TANK_ANOA
+});
+
+const UNIT_KEY_TO_ICON_ID = Object.freeze({
+    WIBU: ASSET_IDS.UI_ICON_WIBU,
+    SPANDUK: ASSET_IDS.UI_ICON_SPANDUK,
+    MAHASISWA: ASSET_IDS.UI_ICON_MAHASISWA,
+    ORATOR: ASSET_IDS.UI_ICON_ORATOR,
+    OJEK_ONLINE: ASSET_IDS.UI_ICON_OJEK_ONLINE,
+    PUNK_ROCK: ASSET_IDS.UI_ICON_PUNK_ROCK,
+    BURUH_PABRIK: ASSET_IDS.UI_ICON_BURUH_PABRIK,
+    PERS_KAMERA: ASSET_IDS.UI_ICON_PERS_KAMERA,
+    DOKTER_RELAWAN: ASSET_IDS.UI_ICON_DOKTER_RELAWAN,
+    SENIMAN_MURAL: ASSET_IDS.UI_ICON_SENIMAN_MURAL,
+    MOBIL_KOMANDO: ASSET_IDS.UI_ICON_MOBIL_KOMANDO,
+    KONDUKTOR_AKSI: ASSET_IDS.UI_ICON_KONDUKTOR_AKSI,
+    KOORDINATOR_LAPANGAN: ASSET_IDS.UI_ICON_KOORDINATOR_LAPANGAN
+});
+
+const BOMB_VARIANT_TO_ASSET_ID = Object.freeze({
+    PETASAN: ASSET_IDS.PROJ_PETASAN,
+    BOTOL: ASSET_IDS.PROJ_BOTOL
+});

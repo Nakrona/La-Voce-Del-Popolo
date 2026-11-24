@@ -100,13 +100,33 @@ body {
     color: var(--text-light);
     border: 2px solid var(--border-amber);
     border-radius: 6px;
-    padding: 6px 12px;
-    min-width: 88px;
+    padding: 5px 10px;
+    min-width: 90px;
     cursor: pointer;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: transform 0.08s ease, background 0.15s ease, opacity 0.15s ease;
+}
+
+.btn-icon-img {
+    width: 26px;
+    height: 26px;
+    object-fit: contain;
+    image-rendering: pixelated;
+    position: relative;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.btn-text-col {
     display: flex;
     flex-direction: column;
     align-items: center;
-    transition: transform 0.08s ease, background 0.15s ease, opacity 0.15s ease;
+    position: relative;
+    z-index: 2;
 }
 
 .unit-btn:hover:not(:disabled) {
@@ -156,12 +176,14 @@ body {
     color: var(--text-light);
     border: 2px solid #f59e0b;
     border-radius: 6px;
-    padding: 6px 12px;
-    min-width: 112px;
+    padding: 5px 10px;
+    min-width: 118px;
     cursor: pointer;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
+    justify-content: center;
+    gap: 6px;
     transition: transform 0.08s ease, box-shadow 0.2s ease, opacity 0.15s ease;
 }
 
@@ -237,19 +259,70 @@ body {
     border-color: var(--accent-gold);
 }
 
-/* Viewport & Canvas */
+/* Viewport, Canvas, & GIF Overlay Layers */
 .stage-viewport {
     position: relative;
     width: 100%;
     aspect-ratio: 2 / 1;
     background: #1e293b;
+    overflow: hidden;
+}
+
+.bg-gif-layer {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    object-fit: cover;
+    pointer-events: none;
+    image-rendering: pixelated;
+    z-index: 0;
+}
+
+.bg-gif-layer.bg-city {
+    top: 0;
+    height: 83.333%;
+}
+
+.bg-gif-layer.bg-road {
+    bottom: 0;
+    height: 18.75%;
 }
 
 #game-canvas {
+    position: relative;
     display: block;
     width: 100%;
     height: 100%;
     image-rendering: pixelated;
+    background: transparent;
+    z-index: 1;
+}
+
+.gif-overlay-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 2;
+}
+
+.dom-gif-sprite {
+    position: absolute;
+    pointer-events: none;
+    image-rendering: pixelated;
+    object-fit: contain;
+    transform-origin: center center;
+}
+
+.start-key-art {
+    display: block;
+    width: 78px;
+    height: 78px;
+    margin: 0 auto 6px;
+    border-radius: 10px;
+    border: 2px solid var(--border-amber);
+    object-fit: cover;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
 }
 
 .edge-cam-btn {
@@ -309,37 +382,57 @@ body {
     background: var(--bg-card);
     border: 2px solid var(--border-amber);
     border-radius: 10px;
-    padding: 24px 28px;
+    padding: 20px 26px;
     max-width: 520px;
+    max-height: 100%;
+    overflow-y: auto;
     width: 100%;
     text-align: center;
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
 }
 
+.start-card {
+    max-width: 400px;
+    padding: 16px 24px;
+}
+
 .subtitle-tag {
-    font-size: 11px;
+    font-size: 10px;
     text-transform: uppercase;
     letter-spacing: 1.4px;
     color: var(--accent-gold);
-    margin-bottom: 6px;
+    margin-bottom: 4px;
 }
 
 .game-title {
-    font-size: 32px;
-    letter-spacing: 1.5px;
+    font-size: 26px;
+    letter-spacing: 1.4px;
     color: #fff;
-    margin-bottom: 10px;
+    margin-bottom: 6px;
     text-shadow: 0 3px 0 var(--accent-orange);
 }
 
 .game-tagline {
-    font-size: 14px;
+    font-size: 12.5px;
     color: #d6d3d1;
-    line-height: 1.45;
-    margin-bottom: 20px;
+    line-height: 1.4;
+    margin-bottom: 12px;
 }
 
-.menu-actions,
+.menu-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    max-width: 240px;
+    margin: 0 auto 12px;
+}
+
+.menu-actions .btn {
+    width: 100%;
+    padding: 9px 18px;
+}
+
 .end-actions {
     display: flex;
     gap: 10px;
@@ -433,9 +526,12 @@ body {
 
 .stage-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 10px;
     margin-bottom: 16px;
+    max-height: 240px;
+    overflow-y: auto;
+    padding-right: 4px;
 }
 
 .stage-card {
@@ -773,6 +869,347 @@ body {
 .hud-bottom strong {
     color: var(--accent-gold);
 }
+
+/* HUD 3+1 Slot Badges & Empty Slots */
+.unit-btn .slot-key-tag {
+    position: absolute;
+    top: 2px;
+    left: 4px;
+    font-size: 9px;
+    font-weight: 800;
+    color: #cbd5e1;
+    z-index: 3;
+    pointer-events: none;
+}
+
+.unit-btn.is-buff-slot {
+    border-color: #f59e0b;
+    background: linear-gradient(180deg, #3b1f0b 0%, #27180e 100%);
+}
+
+.unit-btn.is-buff-slot .slot-key-tag.buff {
+    color: #fbbf24;
+}
+
+.unit-btn.is-slot-empty {
+    opacity: 0.45;
+    border-style: dashed;
+    border-color: #57534e;
+}
+
+/* Shared Coin Pill & Stage Select Header */
+.stage-select-header,
+.shop-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+    text-align: left;
+}
+
+.coin-pill {
+    background: #141210;
+    border: 1px solid #f59e0b;
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 13px;
+    color: #fde68a;
+    white-space: nowrap;
+}
+
+.coin-pill strong {
+    color: #fbbf24;
+    font-size: 15px;
+}
+
+/* Shop & Loadout Modal */
+.shop-card {
+    max-width: 780px;
+    padding: 14px 18px;
+}
+
+.shop-header h2 {
+    color: var(--accent-gold);
+    font-size: 20px;
+    margin-bottom: 2px;
+}
+
+.shop-sub {
+    font-size: 11.5px;
+    color: #d6d3d1;
+}
+
+.shop-feedback {
+    background: rgba(22, 163, 74, 0.22);
+    border: 1px solid #22c55e;
+    color: #bbf7d0;
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 12px;
+    margin-bottom: 8px;
+    text-align: left;
+}
+
+.shop-feedback.is-error {
+    background: rgba(220, 38, 38, 0.22);
+    border-color: #ef4444;
+    color: #fecaca;
+}
+
+.loadout-strip {
+    display: grid;
+    grid-template-columns: 3fr 1.15fr;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.loadout-group {
+    background: #141210;
+    border: 1px solid #44403c;
+    border-radius: 8px;
+    padding: 7px 9px;
+    text-align: left;
+}
+
+.loadout-group.buff {
+    border-color: #d97706;
+    background: #1c140d;
+}
+
+.loadout-group-label {
+    display: block;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    color: var(--accent-gold);
+    margin-bottom: 6px;
+}
+
+.loadout-slots-row {
+    display: flex;
+    gap: 6px;
+}
+
+.loadout-slot-card {
+    flex: 1;
+    min-width: 0;
+    background: #231f1c;
+    border: 1px solid #57534e;
+    border-radius: 6px;
+    padding: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.loadout-slot-card.is-empty {
+    border-style: dashed;
+    background: #171412;
+    justify-content: center;
+    color: #78716c;
+    font-size: 11px;
+    min-height: 44px;
+}
+
+.loadout-slot-icon {
+    width: 26px;
+    height: 26px;
+    object-fit: contain;
+    image-rendering: pixelated;
+    flex-shrink: 0;
+}
+
+.loadout-slot-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.loadout-slot-name {
+    font-size: 11px;
+    font-weight: 700;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.loadout-slot-cost {
+    font-size: 10px;
+    color: var(--accent-gold);
+}
+
+.btn-slot-unequip {
+    background: #7f1d1d;
+    border: 1px solid #ef4444;
+    color: #fecaca;
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.btn-slot-unequip:hover {
+    background: #991b1b;
+}
+
+.shop-filters {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.shop-filter-btn {
+    background: #292524;
+    color: #d6d3d1;
+    border: 1px solid #57534e;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 11.5px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.shop-filter-btn.is-active {
+    background: var(--accent-orange);
+    border-color: var(--accent-gold);
+    color: #fff;
+}
+
+.shop-catalog-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    max-height: 175px;
+    overflow-y: auto;
+    padding-right: 4px;
+    margin-bottom: 10px;
+}
+
+.shop-unit-card {
+    background: #141210;
+    border: 1.5px solid #44403c;
+    border-radius: 8px;
+    padding: 8px;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 6px;
+}
+
+.shop-unit-card.is-buff {
+    border-color: #b45309;
+}
+
+.shop-unit-card.is-equipped {
+    border-color: #22c55e;
+    background: #111b14;
+}
+
+.shop-unit-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.shop-unit-icon {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+    image-rendering: pixelated;
+    background: #231f1c;
+    border: 1px solid #57534e;
+    border-radius: 6px;
+    padding: 2px;
+    flex-shrink: 0;
+}
+
+.shop-unit-meta {
+    flex: 1;
+    min-width: 0;
+}
+
+.shop-unit-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+}
+
+.shop-unit-role {
+    font-size: 10px;
+    color: var(--text-muted);
+    line-height: 1.25;
+}
+
+.shop-unit-badges {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 10px;
+}
+
+.shop-cat-tag {
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-weight: 700;
+    background: #292524;
+    color: #cbd5e1;
+}
+
+.shop-cat-tag.buff {
+    background: rgba(217, 119, 6, 0.25);
+    color: #fbbf24;
+}
+
+.shop-moral-tag {
+    color: var(--accent-gold);
+    font-weight: 700;
+}
+
+.shop-unit-action {
+    width: 100%;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    padding: 5px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.shop-unit-action.buy-ready {
+    background: #ca8a04;
+    border-color: #facc15;
+    color: #1c1917;
+}
+
+.shop-unit-action.buy-locked {
+    background: #292524;
+    border-color: #44403c;
+    color: #a8a29e;
+}
+
+.shop-unit-action.equip-btn {
+    background: #2563eb;
+    border-color: #60a5fa;
+    color: #fff;
+}
+
+.shop-unit-action.unequip-btn {
+    background: #166534;
+    border-color: #22c55e;
+    color: #dcfce7;
+}
+
+.shop-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
 
 .hidden {
     display: none !important;

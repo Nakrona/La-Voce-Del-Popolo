@@ -16,38 +16,57 @@
             </div>
 
             <div id="unit-buttons" class="unit-bar">
-                <button class="unit-btn" data-unit="WIBU" title="Melee cepat &amp; murah">
-                    <span class="unit-name">Wibu</span>
-                    <span class="unit-cost">Cost: 10</span>
+                <button class="unit-btn" data-slot="0" data-unit="WIBU" title="Slot Unit Biasa [1]">
+                    <span class="slot-key-tag">1</span>
+                    <img class="btn-icon-img hidden" data-asset="UI_ICON_WIBU" alt="">
+                    <div class="btn-text-col">
+                        <span class="unit-name">Wibu</span>
+                        <span class="unit-cost">Cost: 10</span>
+                    </div>
                     <span class="unit-cd-bar"></span>
                 </button>
-                <button class="unit-btn" data-unit="SPANDUK" title="Tank garis depan HP tebal">
-                    <span class="unit-name">Spanduk</span>
-                    <span class="unit-cost">Cost: 25</span>
+                <button class="unit-btn" data-slot="1" data-unit="SPANDUK" title="Slot Unit Biasa [2]">
+                    <span class="slot-key-tag">2</span>
+                    <img class="btn-icon-img hidden" data-asset="UI_ICON_SPANDUK" alt="">
+                    <div class="btn-text-col">
+                        <span class="unit-name">Spanduk</span>
+                        <span class="unit-cost">Cost: 25</span>
+                    </div>
                     <span class="unit-cd-bar"></span>
                 </button>
-                <button class="unit-btn" data-unit="MAHASISWA" title="Ranged pelempar kerikil">
-                    <span class="unit-name">Mahasiswa</span>
-                    <span class="unit-cost">Cost: 20</span>
+                <button class="unit-btn" data-slot="2" data-unit="MAHASISWA" title="Slot Unit Biasa [3]">
+                    <span class="slot-key-tag">3</span>
+                    <img class="btn-icon-img hidden" data-asset="UI_ICON_MAHASISWA" alt="">
+                    <div class="btn-text-col">
+                        <span class="unit-name">Mahasiswa</span>
+                        <span class="unit-cost">Cost: 20</span>
+                    </div>
                     <span class="unit-cd-bar"></span>
                 </button>
-                <button class="unit-btn" data-unit="ORATOR" title="Support panggung: Buff seluruh unit">
-                    <span class="unit-name">Orator</span>
-                    <span class="unit-cost">Cost: 35</span>
+                <button class="unit-btn is-buff-slot" data-slot="3" data-unit="ORATOR" title="Slot Khusus Global Buff [4]">
+                    <span class="slot-key-tag buff">4 • BUFF</span>
+                    <img class="btn-icon-img hidden" data-asset="UI_ICON_ORATOR" alt="">
+                    <div class="btn-text-col">
+                        <span class="unit-name">Orator</span>
+                        <span class="unit-cost">Cost: 35</span>
+                    </div>
                     <span class="unit-cd-bar"></span>
                 </button>
             </div>
 
             <button id="btn-special-skill" class="skill-btn is-ready" title="Skill Aktif [Space]: Hujan Petasan &amp; Botol">
-                <span class="skill-name">Hujan Petasan</span>
-                <span id="skill-status" class="skill-status">SIAP [SPACE]</span>
+                <img class="btn-icon-img hidden" data-asset="UI_ICON_PETASAN" alt="">
+                <div class="btn-text-col">
+                    <span class="skill-name">Hujan Petasan</span>
+                    <span id="skill-status" class="skill-status">SIAP [SPACE]</span>
+                </div>
                 <span id="skill-cd-bar" class="skill-cd-bar"></span>
             </button>
 
             <div class="hud-right">
                 <div class="hud-stat">
                     <span class="hud-label">Stage</span>
-                    <strong id="hud-stage" class="hud-value">1/3</strong>
+                    <strong id="hud-stage" class="hud-value">1/10</strong>
                 </div>
                 <div class="hud-stat">
                     <span class="hud-label">Timer</span>
@@ -64,7 +83,14 @@
 
         <!-- Main Viewport & Overlays -->
         <main class="stage-viewport">
+            <!-- Animated GIF Environment Layers (shown automatically when env asset is .gif) -->
+            <img id="bg-city-gif" class="bg-gif-layer bg-city hidden" alt="">
+            <img id="bg-road-gif" class="bg-gif-layer bg-road hidden" alt="">
+
             <canvas id="game-canvas" width="960" height="480"></canvas>
+
+            <!-- Animated GIF Sprite Overlay Layer (syncs 60FPS with Canvas camera & units) -->
+            <div id="gif-overlay-layer" class="gif-overlay-layer"></div>
 
             <!-- Edge Camera Hotspots (Click/Hold Left or Right Edge) -->
             <button id="cam-left-btn" class="edge-cam-btn left hidden" aria-label="Geser Kamera Kiri">&lt;</button>
@@ -76,6 +102,7 @@
             <!-- Start Screen Overlay -->
             <section id="start-screen" class="overlay-screen">
                 <div class="overlay-card start-card">
+                    <img id="start-key-art" class="start-key-art hidden" data-asset="UI_KEY_ART" alt="La Voce Del Popolo">
                     <p class="subtitle-tag">2D Line-Defense Prototype</p>
                     <h1 class="game-title">LA VOCE DEL POPOLO</h1>
                     <p class="game-tagline">
@@ -95,12 +122,59 @@
             <!-- Stage Selection Screen -->
             <section id="stage-select-screen" class="overlay-screen hidden">
                 <div class="overlay-card stage-select-card">
-                    <h2>Pilih Stage</h2>
-                    <p class="stage-select-sub">Taklukkan stage secara berurutan. Progres tersimpan otomatis.</p>
+                    <div class="stage-select-header">
+                        <div>
+                            <h2>Pilih Stage</h2>
+                            <p class="stage-select-sub">Taklukkan stage berurutan &amp; kumpulkan Koin Aksi untuk Shop.</p>
+                        </div>
+                        <div class="coin-pill">Koin Aksi: <strong id="stage-coins">0</strong></div>
+                    </div>
                     <div id="stage-grid" class="stage-grid"></div>
                     <div class="stage-select-actions">
                         <button id="btn-stage-back" class="btn btn-secondary">Kembali</button>
+                        <button id="btn-stage-shop" class="btn btn-primary">Shop &amp; Formasi (3+1)</button>
                         <button id="btn-reset-progress" class="btn btn-danger-subtle">Reset Progres</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Post-Stage Shop & 3+1 Loadout Screen -->
+            <section id="shop-screen" class="overlay-screen hidden">
+                <div class="overlay-card shop-card">
+                    <div class="shop-header">
+                        <div class="shop-title-group">
+                            <h2>Shop &amp; Formasi Pasukan</h2>
+                            <p class="shop-sub">Beli unit sekali saja, lalu lepas &amp; pasang bebas (Maks 3 Unit Biasa + 1 Global Buff).</p>
+                        </div>
+                        <div class="coin-pill">Koin Aksi: <strong id="shop-coins">0</strong></div>
+                    </div>
+
+                    <div id="shop-feedback" class="shop-feedback hidden"></div>
+
+                    <!-- Strict 3 Regular + 1 Global Buff Loadout Strip -->
+                    <div class="loadout-strip">
+                        <div class="loadout-group regular">
+                            <span class="loadout-group-label">SLOT UNIT BIASA (3/3 • TOMBOL 1–3)</span>
+                            <div id="shop-regular-slots" class="loadout-slots-row"></div>
+                        </div>
+                        <div class="loadout-group buff">
+                            <span class="loadout-group-label">SLOT KHUSUS GLOBAL BUFF (1/1 • TOMBOL 4)</span>
+                            <div id="shop-buff-slot" class="loadout-slots-row"></div>
+                        </div>
+                    </div>
+
+                    <!-- Catalog Category Tabs -->
+                    <div class="shop-filters">
+                        <button class="shop-filter-btn is-active" data-shop-filter="ALL">Semua Unit</button>
+                        <button class="shop-filter-btn" data-shop-filter="REGULAR">Unit Biasa (10)</button>
+                        <button class="shop-filter-btn" data-shop-filter="GLOBAL_BUFF">Global Buff (3)</button>
+                    </div>
+
+                    <div id="shop-catalog-grid" class="shop-catalog-grid"></div>
+
+                    <div class="shop-actions">
+                        <button id="btn-shop-back" class="btn btn-secondary">Pilih Stage</button>
+                        <button id="btn-shop-next" class="btn btn-primary hidden">Lanjut Stage Berikutnya</button>
                     </div>
                 </div>
             </section>
@@ -110,10 +184,10 @@
                 <div class="overlay-card howto-card">
                     <h2>Cara Bermain</h2>
                     <ul class="howto-list">
-                        <li><strong>Tujuan:</strong> Hancurkan <strong>Markas Polisi (Kanan)</strong> sebelum Timer habis, dan jangan biarkan <strong>Panggung Utama (Kiri)</strong> roboh.</li>
-                        <li><strong>Spawn Unit:</strong> Klik tombol unit di atas (atau tombol <code>1</code>–<code>4</code>) memakai <strong>Poin Moral</strong> yang terisi otomatis.</li>
-                        <li><strong>Skill Aktif [Space]:</strong> Aktifkan <strong>Hujan Petasan &amp; Botol</strong> untuk menghujani barisan polisi dari langit (cooldown 16 detik).</li>
-                        <li><strong>Sistem Counter:</strong> <em>Spanduk</em> (Tank) melindungi <em>Mahasiswa</em> (Ranged); hindari spam <em>Wibu</em> saat <em>Gas Air Mata (AoE)</em> muncul; pakai <em>Orator</em> untuk buff global!</li>
+                        <li><strong>Tujuan:</strong> Hancurkan markas lawan (kanan) sebelum Timer habis, dan pertahankan markas kita (kiri).</li>
+                        <li><strong>Formasi 3 + 1 &amp; Shop:</strong> Bawa maksimal <strong>3 Unit Biasa</strong> (tombol <code>1</code>–<code>3</code>) dan <strong>1 Unit Global Buff</strong> (tombol <code>4</code>). Koin dari tiap stage dipakai di Shop untuk membuka unit permanen lalu bebas lepas-pasang!</li>
+                        <li><strong>Skill Aktif [Space]:</strong> Aktifkan <strong>Hujan Petasan &amp; Botol</strong> untuk menghujani barisan musuh dari langit (cooldown 16 detik).</li>
+                        <li><strong>Sistem Counter:</strong> Padukan Tank penahan knockback (<em>Spanduk/Buruh</em>), DPS jarak jauh (<em>Mahasiswa/Pers/Mural</em>), Medis, &amp; Global Buff agar tangguh menghadapi Brimob, Tentara, dan Boss Tank Anoa!</li>
                         <li><strong>Kontrol Kamera &amp; Waktu:</strong> Tahan <code>A</code>/<code>D</code> geser kamera, <code>W</code> Fast-Forward 2x, <code>S</code> Slow-Mo 0.5x, dan <code>ESC</code> untuk Pause.</li>
                     </ul>
                     <button id="btn-howto-close" class="btn btn-primary">Mengerti</button>
@@ -171,10 +245,12 @@
                         <div><span>Skor Akhir:</span> <strong id="end-score">0000</strong></div>
                         <div><span>High Score:</span> <strong id="end-highscore">0000</strong></div>
                         <div><span>Sisa Waktu:</span> <strong id="end-time">00 detik</strong></div>
+                        <div id="end-coins-row"><span>Koin Aksi Diperoleh:</span> <strong id="end-coins">+0 (Total: 0)</strong></div>
                     </div>
                     <div class="end-actions">
                         <button id="btn-retry" class="btn btn-secondary">Retry</button>
-                        <button id="btn-next" class="btn btn-primary">Next Stage</button>
+                        <button id="btn-end-shop" class="btn btn-primary">Shop &amp; Formasi</button>
+                        <button id="btn-next" class="btn btn-secondary">Langsung Next Stage</button>
                         <button id="btn-menu" class="btn btn-secondary">Menu Utama</button>
                     </div>
                 </div>
@@ -183,17 +259,17 @@
 
         <!-- Bottom Control Hint Bar -->
         <footer id="hud-bottom" class="hud-bottom hidden">
-            <span><strong>1–4 / Klik UI:</strong> Spawn Unit</span>
+            <span><strong>1–3:</strong> Unit Biasa</span>
+            <span>|</span>
+            <span><strong>4:</strong> Global Buff</span>
             <span>|</span>
             <span><strong>Space:</strong> Hujan Petasan</span>
             <span>|</span>
             <span><strong>Hover Unit/Shop:</strong> Cek Stats</span>
             <span>|</span>
-            <span><strong>A / D:</strong> Geser Kamera</span>
+            <span><strong>A / D:</strong> Kamera</span>
             <span>|</span>
-            <span><strong>W:</strong> Fast Forward 2x</span>
-            <span>|</span>
-            <span><strong>S:</strong> Slow-Mo 0.5x</span>
+            <span><strong>W / S:</strong> 2x / 0.5x</span>
             <span>|</span>
             <span><strong>ESC:</strong> Pause</span>
         </footer>
@@ -217,8 +293,9 @@
     </div>
 
     <!-- Ordered OOP & SOLID Script Loading (Works on both file:// and HTTP/Vercel) -->
-    <script src="js/config/GameConfig.js"></script>
+    <script src="js/config/AssetConfig.js"></script>
     <script src="js/config/SoundConfig.js"></script>
+    <script src="js/config/GameConfig.js"></script>
     <script src="js/core/EventBus.js"></script>
     <script src="js/core/StateMachine.js"></script>
     <script src="js/core/StorageService.js"></script>
@@ -231,9 +308,12 @@
     <script src="js/entities/Unit.js"></script>
     <script src="js/systems/UnitFactory.js"></script>
     <script src="js/systems/ResourceManager.js"></script>
+    <script src="js/systems/ShopLoadoutManager.js"></script>
     <script src="js/systems/ActiveSkill.js"></script>
     <script src="js/systems/SkillManager.js"></script>
     <script src="js/systems/AudioService.js"></script>
+    <script src="js/systems/AssetManager.js"></script>
+    <script src="js/systems/DomSpriteLayer.js"></script>
     <script src="js/systems/EnemySpawnerAI.js"></script>
     <script src="js/systems/CombatSystem.js"></script>
     <script src="js/systems/Renderer.js"></script>

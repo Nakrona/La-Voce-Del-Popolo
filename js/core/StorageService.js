@@ -13,6 +13,12 @@ class IStorageService {
     resetStageProgress() { throw new Error("resetStageProgress() must be implemented."); }
     getAudioSettings() { throw new Error("getAudioSettings() must be implemented."); }
     saveAudioSettings(settings) { throw new Error("saveAudioSettings() must be implemented."); }
+    getCoins() { throw new Error("getCoins() must be implemented."); }
+    saveCoins(coins) { throw new Error("saveCoins() must be implemented."); }
+    getOwnedUnits() { throw new Error("getOwnedUnits() must be implemented."); }
+    saveOwnedUnits(units) { throw new Error("saveOwnedUnits() must be implemented."); }
+    getLoadout() { throw new Error("getLoadout() must be implemented."); }
+    saveLoadout(loadout) { throw new Error("saveLoadout() must be implemented."); }
 }
 
 /**
@@ -23,13 +29,19 @@ class LocalStorageService extends IStorageService {
         highScoreKey = WORLD_CONFIG.HIGH_SCORE_STORAGE_KEY,
         unlockedStageKey = WORLD_CONFIG.UNLOCKED_STAGE_STORAGE_KEY,
         clearedStagesKey = WORLD_CONFIG.CLEARED_STAGES_STORAGE_KEY,
-        audioSettingsKey = WORLD_CONFIG.AUDIO_SETTINGS_STORAGE_KEY
+        audioSettingsKey = WORLD_CONFIG.AUDIO_SETTINGS_STORAGE_KEY,
+        coinsKey = WORLD_CONFIG.COINS_STORAGE_KEY,
+        ownedUnitsKey = WORLD_CONFIG.OWNED_UNITS_STORAGE_KEY,
+        loadoutKey = WORLD_CONFIG.LOADOUT_STORAGE_KEY
     } = {}) {
         super();
         this._highScoreKey = highScoreKey;
         this._unlockedStageKey = unlockedStageKey;
         this._clearedStagesKey = clearedStagesKey;
         this._audioSettingsKey = audioSettingsKey;
+        this._coinsKey = coinsKey;
+        this._ownedUnitsKey = ownedUnitsKey;
+        this._loadoutKey = loadoutKey;
     }
 
     _readItem(key) {
@@ -127,5 +139,46 @@ class LocalStorageService extends IStorageService {
         };
         this._writeItem(this._audioSettingsKey, JSON.stringify(payload));
         return payload;
+    }
+
+    getCoins() {
+        const parsed = parseInt(this._readItem(this._coinsKey), 10);
+        return Number.isNaN(parsed) || parsed < 0 ? 0 : parsed;
+    }
+
+    saveCoins(coins) {
+        const sanitized = Math.max(0, Math.floor(coins));
+        this._writeItem(this._coinsKey, String(sanitized));
+        return sanitized;
+    }
+
+    getOwnedUnits() {
+        const raw = this._readItem(this._ownedUnitsKey);
+        if (!raw) return null;
+        try {
+            const parsed = JSON.parse(raw);
+            return Array.isArray(parsed) ? parsed : null;
+        } catch (err) {
+            return null;
+        }
+    }
+
+    saveOwnedUnits(units) {
+        this._writeItem(this._ownedUnitsKey, JSON.stringify(Array.isArray(units) ? units : []));
+    }
+
+    getLoadout() {
+        const raw = this._readItem(this._loadoutKey);
+        if (!raw) return null;
+        try {
+            const parsed = JSON.parse(raw);
+            return parsed && typeof parsed === "object" ? parsed : null;
+        } catch (err) {
+            return null;
+        }
+    }
+
+    saveLoadout(loadout) {
+        this._writeItem(this._loadoutKey, JSON.stringify(loadout || {}));
     }
 }

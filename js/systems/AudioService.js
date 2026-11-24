@@ -7,6 +7,7 @@ class IAudioService {
     unlock() { throw new Error("unlock() must be implemented."); }
     playSfx(soundId) { throw new Error("playSfx() must be implemented."); }
     playMusic(soundId) { throw new Error("playMusic() must be implemented."); }
+    playBattlePlaylistNext() { throw new Error("playBattlePlaylistNext() must be implemented."); }
     stopMusic() { throw new Error("stopMusic() must be implemented."); }
     setBattleAmbiencePaused(paused) { throw new Error("setBattleAmbiencePaused() must be implemented."); }
     setCrowdIntensity(ratio) { throw new Error("setCrowdIntensity() must be implemented."); }
@@ -21,13 +22,16 @@ class IAudioService {
 
 /**
  * Concrete HTMLAudioElement audio controller reading from assets/audio/ via SOUND_MANIFEST
- * with independent BGM/SFX volume mixing and safe fallback (SRP & LSP).
+ * with alternating battle BGM playlist, independent BGM/SFX volume mixing, and safe fallback (SRP & LSP).
  */
 class HtmlAudioService extends IAudioService {
-    constructor(baseFolder, soundManifest, initialSettings = {}) {
+    constructor(baseFolder, soundManifest, initialSettings = {}, battlePlaylist = BATTLE_BGM_PLAYLIST) {
         super();
         this._baseFolder = baseFolder;
         this._manifest = soundManifest;
+        this._battlePlaylist = battlePlaylist && battlePlaylist.length > 0 ? battlePlaylist : [SOUND_IDS.BGM_BATTLE];
+        this._battlePlaylistCursor = 0;
+
         this._bgmVolume = typeof initialSettings.bgmVolume === "number" ? initialSettings.bgmVolume : 1.0;
         this._sfxVolume = typeof initialSettings.sfxVolume === "number" ? initialSettings.sfxVolume : 1.0;
         this._muted = Boolean(initialSettings.muted);
@@ -67,8 +71,22 @@ class HtmlAudioService extends IAudioService {
             const entry = this._entries.get(cfg.id);
             if (entry && entry.audio === audio) entry.loaded = false;
         });
+        if (cfg.category === "BGM" && !cfg.loop) {
+            audio.addEventListener("ended", () => this._onBgmTrackEnded(cfg.id));
+        }
         audio.src = src;
         return audio;
+    }
+
+    _isBattleTrack(soundId) {
+        return this._battlePlaylist.includes(soundId);
+    }
+
+    _onBgmTrackEnded(endedId) {
+        if (this._currentBgmId !== endedId) return;
+        if (this._isBattleTrack(endedId)) {
+            this.playBattlePlaylistNext();
+        }
     }
 
     _computeEffectiveVolume(cfg) {
@@ -128,7 +146,7 @@ class HtmlAudioService extends IAudioService {
             if (crowd) crowd.audio.pause();
         } else if (this._unlocked) {
             if (bgm) bgm.audio.play().catch(() => {});
-            if (crowd && this._currentBgmId === SOUND_IDS.BGM_BATTLE && !this._ambiencePaused) {
+            if (crowd && this._isBattleTrack(this._currentBgmId) && !this._ambiencePaused) {
                 crowd.audio.play().catch(() => {});
             }
         }
@@ -142,9 +160,20 @@ class HtmlAudioService extends IAudioService {
 
         if (this._ambiencePaused) {
             crowd.audio.pause();
-        } else if (!this._muted && this._unlocked && this._currentBgmId === SOUND_IDS.BGM_BATTLE) {
+        } else if (!this._muted && this._unlocked && this._isBattleTrack(this._currentBgmId)) {
             crowd.audio.play().catch(() => {});
         }
+    }
+
+    playBattlePlaylistNext() {
+        const trackId = this._battlePlaylist[this._battlePlaylistCursor % this._battlePlaylist.length];
+        this._battlePlaylistCursor = (this._battlePlaylistCursor + 1) % this._battlePlaylist.length;
+        const entry = this._entries.get(trackId);
+        if (entry) {
+            entry.audio.currentTime = 0;
+        }
+        this.playMusic(trackId);
+        return trackId;
     }
 
     playMusic(soundId) {
@@ -160,7 +189,7 @@ class HtmlAudioService extends IAudioService {
         }
 
         const crowd = this._entries.get(SOUND_IDS.AMB_CROWD);
-        if (soundId === SOUND_IDS.BGM_BATTLE && !this._ambiencePaused) {
+        if (this._isBattleTrack(soundId) && !this._ambiencePaused) {
             if (crowd && !this._muted && this._unlocked) {
                 crowd.audio.play().catch(() => {});
             }
@@ -184,6 +213,7 @@ class HtmlAudioService extends IAudioService {
                 cur.audio.currentTime = 0;
             }
         }
+        this._currentBgmId = null;
         const crowd = this._entries.get(SOUND_IDS.AMB_CROWD);
         if (crowd) {
             crowd.audio.pause();
@@ -229,25 +259,19 @@ class AudioCoordinator {
     }
 
     _bindEvents() {
+        const startBattleTrack = () => {
+            this._audio.unlock();
+            this._audio.setBattleAmbiencePaused(false);
+            this._audio.playBattlePlaylistNext();
+        };
+
         this._eventBus.on("UI_CLICK", () => {
             this._audio.unlock();
             this._audio.playSfx(SOUND_IDS.SFX_UI_CLICK);
         });
-        this._eventBus.on("START_STAGE", () => {
-            this._audio.unlock();
-            this._audio.setBattleAmbiencePaused(false);
-            this._audio.playMusic(SOUND_IDS.BGM_BATTLE);
-        });
-        this._eventBus.on("RETRY_STAGE", () => {
-            this._audio.unlock();
-            this._audio.setBattleAmbiencePaused(false);
-            this._audio.playMusic(SOUND_IDS.BGM_BATTLE);
-        });
-        this._eventBus.on("NEXT_STAGE", () => {
-            this._audio.unlock();
-            this._audio.setBattleAmbiencePaused(false);
-            this._audio.playMusic(SOUND_IDS.BGM_BATTLE);
-        });
+        this._eventBus.on("START_STAGE", startBattleTrack);
+        this._eventBus.on("RETRY_STAGE", startBattleTrack);
+        this._eventBus.on("NEXT_STAGE", startBattleTrack);
         this._eventBus.on("GAME_PAUSED", ({ paused }) => {
             this._audio.setBattleAmbiencePaused(paused);
         });
@@ -261,10 +285,31 @@ class AudioCoordinator {
         });
         this._eventBus.on("UNIT_SPAWNED", ({ key, faction }) => {
             if (faction === FACTIONS.PLAYER) {
-                this._audio.playSfx(key === "ORATOR" ? SOUND_IDS.SFX_ORATOR : SOUND_IDS.SFX_SPAWN);
-            } else if (key === "BARRACUDA") {
+                const unitCfg = UNIT_CONFIGS[key];
+                const sfxId = (unitCfg && unitCfg.spawnSfxId) ? unitCfg.spawnSfxId : SOUND_IDS.SFX_SPAWN;
+                this._audio.playSfx(sfxId);
+            } else if (UNIT_CONFIGS[key] && UNIT_CONFIGS[key].isBoss) {
                 this._audio.playSfx(SOUND_IDS.SFX_BARRACUDA);
             }
+        });
+        this._eventBus.on("SHOP_BUY_SFX", () => {
+            this._audio.unlock();
+            this._audio.playSfx(SOUND_IDS.SFX_SHOP_BUY);
+        });
+        this._eventBus.on("SHOP_EQUIP_SFX", () => {
+            this._audio.unlock();
+            this._audio.playSfx(SOUND_IDS.SFX_SHOP_EQUIP);
+        });
+        this._eventBus.on("SHOP_UNEQUIP_SFX", () => {
+            this._audio.unlock();
+            this._audio.playSfx(SOUND_IDS.SFX_SHOP_UNEQUIP);
+        });
+        this._eventBus.on("SHOP_ERROR_SFX", () => {
+            this._audio.unlock();
+            this._audio.playSfx(SOUND_IDS.SFX_SHOP_ERROR);
+        });
+        this._eventBus.on("HEAL_PULSE", () => {
+            this._audio.playSfx(SOUND_IDS.SFX_HEAL);
         });
         this._eventBus.on("MELEE_HIT", () => {
             this._audio.playSfx(SOUND_IDS.SFX_HIT_MELEE);
@@ -279,6 +324,8 @@ class AudioCoordinator {
                 this._audio.playSfx(SOUND_IDS.SFX_TEARGAS);
             } else if (kind === "PETASAN") {
                 this._audio.playSfx(SOUND_IDS.SFX_PETASAN);
+            } else if (kind === "SONIC") {
+                this._audio.playSfx(SOUND_IDS.SFX_SONIC);
             }
         });
         this._eventBus.on("CROWD_DOMINANCE", ({ ratio }) => {

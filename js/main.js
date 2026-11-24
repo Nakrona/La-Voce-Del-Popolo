@@ -15,10 +15,19 @@ document.addEventListener("DOMContentLoaded", () => {
     const skillManager = new SkillManager(activeSkill);
     const audioService = new HtmlAudioService(AUDIO_BASE_FOLDER, SOUND_MANIFEST, storageService.getAudioSettings());
     new AudioCoordinator(eventBus, audioService);
+
+    const assetService = new HtmlAssetService(IMAGE_BASE_FOLDER, IMAGE_MANIFEST);
+    const domSpriteLayer = new DomSpriteLayer(
+        document.getElementById("gif-overlay-layer"),
+        document.getElementById("bg-city-gif"),
+        document.getElementById("bg-road-gif")
+    );
+
     const spawnerAI = new EnemySpawnerAI();
     const combatSystem = new CombatSystem(eventBus);
-    const renderer = new Renderer(canvas, camera);
-    const uiManager = new UIManager(eventBus, inputHandler, audioService, storageService);
+    const shopLoadoutManager = new ShopLoadoutManager(UNIT_CONFIGS, storageService, eventBus, SHOP_CONFIG);
+    const renderer = new Renderer(canvas, camera, assetService, domSpriteLayer);
+    const uiManager = new UIManager(eventBus, inputHandler, audioService, storageService, assetService);
     const tooltipController = new TooltipController({
         canvas,
         camera,
@@ -37,6 +46,7 @@ document.addEventListener("DOMContentLoaded", () => {
         unitFactory,
         resourceManager,
         skillManager,
+        shopLoadoutManager,
         spawnerAI,
         combatSystem,
         renderer,

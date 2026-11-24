@@ -41,6 +41,10 @@ class FallingBomb {
         this.active = true;
     }
 
+    getAssetId() {
+        return BOMB_VARIANT_TO_ASSET_ID[this.variantType] || null;
+    }
+
     update(dtEff) {
         if (!this.active) return false;
 

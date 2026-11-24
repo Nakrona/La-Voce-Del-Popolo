@@ -15,6 +15,7 @@ class CombatSystem {
         this.playerBase = null;
         this.enemyBase = null;
         this.screenShakeTimer = 0;
+        this.moralRegenMultiplier = 1.0;
     }
 
     reset(playerBase, enemyBase) {
@@ -26,6 +27,11 @@ class CombatSystem {
         this.playerBase = playerBase;
         this.enemyBase = enemyBase;
         this.screenShakeTimer = 0;
+        this.moralRegenMultiplier = 1.0;
+    }
+
+    getMoralRegenMultiplier() {
+        return this.moralRegenMultiplier;
     }
 
     getEnemyUnits() {
@@ -44,13 +50,24 @@ class CombatSystem {
         this._eventBus.emit("RANGED_SHOT");
     }
 
+    notifyHealPulse() {
+        this._eventBus.emit("HEAL_PULSE");
+    }
+
+    _isGlobalBuffUnit(unit) {
+        const cfg = UNIT_CONFIGS[unit.key];
+        return Boolean(cfg && cfg.slotCategory === UNIT_SLOT_CATEGORIES.GLOBAL_BUFF);
+    }
+
     canSpawnPlayerUnit(unitKey) {
-        if (unitKey === "ORATOR") {
-            let activeOrators = 0;
+        const cfg = UNIT_CONFIGS[unitKey];
+        if (!cfg) return false;
+        if (cfg.slotCategory === UNIT_SLOT_CATEGORIES.GLOBAL_BUFF) {
+            let activeBuffUnits = 0;
             for (let i = 0; i < this.playerUnits.length; i++) {
-                if (this.playerUnits[i].key === "ORATOR") activeOrators++;
+                if (this._isGlobalBuffUnit(this.playerUnits[i])) activeBuffUnits++;
             }
-            return activeOrators < UNIT_CONFIGS.ORATOR.maxStacks;
+            return activeBuffUnits < (cfg.maxStacks || 2);
         }
         return this.playerUnits.length < WORLD_CONFIG.MAX_UNITS_PER_FACTION;
     }
@@ -127,21 +144,26 @@ class CombatSystem {
     }
 
     _applyOratorBuffs() {
-        let oratorCount = 0;
+        this.moralRegenMultiplier = 1.0;
+        const activeBuffs = [];
+
         for (let i = 0; i < this.playerUnits.length; i++) {
             const u = this.playerUnits[i];
-            if (u.key === "ORATOR" && u.isAlive()) {
-                oratorCount++;
+            if (u.isAlive() && this._isGlobalBuffUnit(u)) {
+                const cfg = UNIT_CONFIGS[u.key];
+                if (cfg) {
+                    activeBuffs.push(cfg);
+                    this.moralRegenMultiplier *= (cfg.moralRegenMultiplier || 1.0);
+                }
             }
         }
 
-        const oratorCfg = UNIT_CONFIGS.ORATOR;
         for (let i = 0; i < this.playerUnits.length; i++) {
             const u = this.playerUnits[i];
             u.resetBuffs();
-            if (u.key !== "ORATOR") {
-                for (let s = 0; s < oratorCount; s++) {
-                    u.applyOratorBuff(oratorCfg.atkSpeedMultiplier, oratorCfg.moveSpeedMultiplier);
+            if (!this._isGlobalBuffUnit(u)) {
+                for (let s = 0; s < activeBuffs.length; s++) {
+                    u.applyGlobalBuff(activeBuffs[s]);
                 }
             }
         }
@@ -153,7 +175,7 @@ class CombatSystem {
 
         for (let i = 0; i < opposingUnits.length; i++) {
             const candidate = opposingUnits[i];
-            if (!candidate.isAlive() || candidate.key === "ORATOR") continue;
+            if (!candidate.isAlive() || this._isGlobalBuffUnit(candidate)) continue;
             const dist = unit.direction === 1
                 ? candidate.getLeftEdge() - unit.getRightEdge()
                 : unit.getLeftEdge() - candidate.getRightEdge();
@@ -209,7 +231,7 @@ class CombatSystem {
         let hitTarget = null;
         for (let i = 0; i < targets.length; i++) {
             const t = targets[i];
-            if (!t.isAlive() || t.key === "ORATOR") continue;
+            if (!t.isAlive() || this._isGlobalBuffUnit(t)) continue;
             if (p.x >= t.getLeftEdge() && p.x <= t.getRightEdge()) {
                 hitTarget = t;
                 break;
@@ -226,12 +248,12 @@ class CombatSystem {
 
         p.active = false;
         if (p.aoeRadius > 0) {
-            const impactKind = p.slowDuration > 0 ? "WATER" : "TEARGAS";
+            const impactKind = p.aoeImpactKind || (p.slowDuration > 0 ? "WATER" : "TEARGAS");
             this._eventBus.emit("AOE_IMPACT", { kind: impactKind });
             this.spawnAoeCloud(p.x, WORLD_CONFIG.GROUND_Y - 26, p.color, p.aoeRadius);
             for (let i = 0; i < targets.length; i++) {
                 const t = targets[i];
-                if (!t.isAlive() || t.key === "ORATOR") continue;
+                if (!t.isAlive() || this._isGlobalBuffUnit(t)) continue;
                 if (Math.abs(t.x - p.x) <= p.aoeRadius) {
                     t.takeDamage(p.damage);
                     if (p.slowDuration > 0) t.applySlow(p.slowFactor, p.slowDuration);
@@ -239,10 +261,18 @@ class CombatSystem {
                 }
             }
             if (targetBase && targetBase.isAlive() && Math.abs(targetBase.x - p.x) <= p.aoeRadius) {
-                targetBase.takeDamage(p.damage);
+                targetBase.takeDamage(p.damage * (p.baseDamageMultiplier || 1.0));
             }
         } else {
-            hitTarget.takeDamage(p.damage);
+            const isBaseHit = targetBase && hitTarget === targetBase;
+            const dmg = isBaseHit ? p.damage * (p.baseDamageMultiplier || 1.0) : p.damage;
+            hitTarget.takeDamage(dmg);
+            if (!isBaseHit && p.slowDuration > 0 && hitTarget.applySlow) {
+                hitTarget.applySlow(p.slowFactor, p.slowDuration);
+            }
+            if (!isBaseHit && p.knockbackDistance > 0 && hitTarget.applyKnockback) {
+                hitTarget.applyKnockback(p.knockbackDistance);
+            }
             this.spawnHitSpark(p.x, p.y, p.color, 10);
         }
     }

@@ -5,7 +5,8 @@ Anda dapat mengganti file apa saja di folder ini dengan nama file yang sama,
 atau menggunakan tombol 'Kelola Audio' di dalam game untuk memilih folder lokal.
 
 - bgm_menu.mp3 : City Loop (OGA CC0) | CC0 | https://opengameart.org/content/city-loop-0
-- bgm_battle.mp3 : JRPG Epic Rock Battle Theme #1 (OGA CC0) | CC0 | https://opengameart.org/content/jrpg-epic-rock-battle-theme-1
+- bgm_battle.mp3 : https://youtu.be/6Jq5VoLtolk?si=FXDjpyBm65fdSCzu
+- bgm_battle2.mp3 : https://youtu.be/4eKN_H-iavM?si=HUSQkBQxxuiMQiEc
 - amb_crowd.ogg : Crowd Shouting/Speaking Ambience (OGA CC0) | CC0 | https://opengameart.org/content/crowd-shoutingspeaking-ambience
 - sfx_ui_click.wav : Click (OGA CC0) | CC0 | https://opengameart.org/content/click
 - sfx_spawn.ogg : Bubbles Pop (OGA CC0) | CC0 | https://opengameart.org/content/bubbles-pop
@@ -18,3 +19,11 @@ atau menggunakan tombol 'Kelola Audio' di dalam game untuk memilih folder lokal.
 - sfx_hit_melee.ogg (impact.1.ogg) : 10 Impact/Shield Blocks by StarNinjas (OGA CC0) | CC0 | https://opengameart.org/content/10-impactshield-blocks
 - sfx_water_cannon.ogg (splash_01.ogg) : 40 CC0 Water Splash SFX (OGA CC0) | CC0 | https://opengameart.org/content/40-cc0-water-splash-slime-sfx
 - sfx_throw.wav (swishes/swish-1.wav) : Swishes Sound Pack (OGA CC0) | CC0 | https://opengameart.org/content/swishes-sound-pack
+- sfx_shop_buy.wav : Procedural Synth WAV (CC0 / Replaceable)
+- sfx_shop_equip.wav : Procedural Synth WAV (CC0 / Replaceable)
+- sfx_shop_unequip.wav : Procedural Synth WAV (CC0 / Replaceable)
+- sfx_shop_error.wav : Procedural Synth WAV (CC0 / Replaceable)
+- sfx_heal.wav : Procedural Synth WAV (CC0 / Replaceable)
+- sfx_buff_drum.wav : Procedural Synth WAV (CC0 / Replaceable)
+- sfx_buff_radio.wav : Procedural Synth WAV (CC0 / Replaceable)
+- sfx_sonic.wav : Procedural Synth WAV (CC0 / Replaceable)

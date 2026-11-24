@@ -24,8 +24,8 @@ class ResourceManager {
         }
     }
 
-    update(dtEff) {
-        this.moral = Math.min(this._maxMoral, this.moral + this.regenRate * dtEff);
+    update(dtEff, regenMultiplier = 1.0) {
+        this.moral = Math.min(this._maxMoral, this.moral + this.regenRate * regenMultiplier * dtEff);
         for (const [key, cd] of this._cooldowns.entries()) {
             if (cd > 0) {
                 this._cooldowns.set(key, Math.max(0, cd - dtEff));

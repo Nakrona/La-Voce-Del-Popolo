@@ -85,6 +85,8 @@ class Unit extends Entity {
         // Temporary modifiers
         this.atkSpeedBuff = 1.0;
         this.moveSpeedBuff = 1.0;
+        this.damageBuff = 1.0;
+        this.damageTakenMult = 1.0;
         this.slowFactor = 1.0;
         this.slowTimer = 0;
 
@@ -101,6 +103,10 @@ class Unit extends Entity {
         return UNIT_STATE_LABELS[this.state] || this.state;
     }
 
+    getAssetId() {
+        return UNIT_KEY_TO_ASSET_ID[this.key] || null;
+    }
+
     getEffectiveMoveSpeed() {
         return this.baseSpeed * this.moveSpeedBuff * this.slowFactor;
     }
@@ -109,14 +115,39 @@ class Unit extends Entity {
         return this.attackInterval / this.atkSpeedBuff;
     }
 
+    getEffectiveDamage() {
+        return Math.round(this.damage * this.damageBuff);
+    }
+
     resetBuffs() {
         this.atkSpeedBuff = 1.0;
         this.moveSpeedBuff = 1.0;
+        this.damageBuff = 1.0;
+        this.damageTakenMult = 1.0;
     }
 
-    applyOratorBuff(atkMult, moveMult) {
+    applyOratorBuff(atkMult, moveMult, damageMult = 1.0, damageTakenMult = 1.0) {
         this.atkSpeedBuff *= atkMult;
         this.moveSpeedBuff *= moveMult;
+        this.damageBuff *= damageMult;
+        this.damageTakenMult *= damageTakenMult;
+    }
+
+    applyGlobalBuff(buffCfg) {
+        if (!buffCfg) return;
+        this.applyOratorBuff(
+            buffCfg.atkSpeedMultiplier || 1.0,
+            buffCfg.moveSpeedMultiplier || 1.0,
+            buffCfg.damageMultiplier || 1.0,
+            buffCfg.damageTakenMultiplier || 1.0
+        );
+    }
+
+    heal(amount) {
+        if (!this.isAlive() || amount <= 0) return 0;
+        const before = this.hp;
+        this.hp = Math.min(this.maxHp, this.hp + amount);
+        return this.hp - before;
     }
 
     applySlow(factor, duration) {
@@ -132,7 +163,7 @@ class Unit extends Entity {
     }
 
     takeDamage(amount) {
-        super.takeDamage(amount);
+        super.takeDamage(amount * this.damageTakenMult);
         if (!this.isAlive()) {
             this.fsm.changeState("DEAD");
         }
@@ -186,7 +217,16 @@ class Unit extends Entity {
     getActiveEffectSummary() {
         const tags = [];
         if (this.atkSpeedBuff > 1.01) {
-            tags.push(`Orasi +${Math.round((this.atkSpeedBuff - 1) * 100)}% AtkSpd`);
+            tags.push(`Buff +${Math.round((this.atkSpeedBuff - 1) * 100)}% AtkSpd`);
+        }
+        if (this.damageBuff > 1.01) {
+            tags.push(`Buff +${Math.round((this.damageBuff - 1) * 100)}% DMG`);
+        }
+        if (this.damageTakenMult < 0.99) {
+            tags.push(`Perisai -${Math.round((1 - this.damageTakenMult) * 100)}% DMG`);
+        }
+        if (this.moveSpeedBuff > 1.01) {
+            tags.push(`+${Math.round((this.moveSpeedBuff - 1) * 100)}% Speed`);
         }
         if (this.slowTimer > 0) {
             tags.push(`Slow -${Math.round((1 - this.slowFactor) * 100)}% (${this.slowTimer.toFixed(1)}s)`);
@@ -212,7 +252,7 @@ class Unit extends Entity {
             hpCurrent: Math.ceil(this.hp),
             hpMax: this.maxHp,
             stats: [
-                { label: "Damage", value: `${this.damage}` },
+                { label: "Damage", value: `${this.getEffectiveDamage()}` },
                 { label: "Interval Serang", value: `${this.getEffectiveAttackInterval().toFixed(2)}s` },
                 { label: "Jarak Serang", value: `${this.range} px` },
                 { label: "Kecepatan", value: `${Math.round(this.getEffectiveMoveSpeed())} px/s` },
@@ -224,46 +264,89 @@ class Unit extends Entity {
 }
 
 /**
- * Direct melee attacker (Pendemo Wibu, Pendemo Spanduk, Polisi Dalmas).
+ * Direct melee attacker (Pendemo Wibu, Spanduk, Ojol, Punk, Buruh, Dalmas, Brimob).
  */
 class MeleeUnit extends Unit {
     performAttack(target, combatContext) {
-        target.takeDamage(this.damage);
+        target.takeDamage(this.getEffectiveDamage());
         combatContext.spawnHitSpark(target.x, WORLD_CONFIG.GROUND_Y - target.height * 0.5, this.accentColor);
         combatContext.notifyMeleeHit();
     }
 }
 
 /**
- * Boss heavy melee attacker with bonus damage against enemy base (Mobil Barracuda).
+ * Heavy armored attacker supporting bonus base damage plus optional AoE projectiles (Barracuda, Tank Anoa, Mobil Komando).
  */
 class BossBarracudaUnit extends Unit {
     performAttack(target, combatContext) {
+        const baseDmg = this.getEffectiveDamage();
         const isBase = target instanceof BaseStructure;
-        const finalDamage = isBase ? this.damage * (this.config.baseDamageMultiplier || 1.5) : this.damage;
+        const baseMult = this.config.baseDamageMultiplier || 1.5;
+
+        if (this.config.projectileAssetId) {
+            const spawnX = this.x + this.direction * (this.width * 0.48);
+            const spawnY = WORLD_CONFIG.GROUND_Y - this.height * 0.62;
+            combatContext.spawnProjectile(new Projectile({
+                x: spawnX,
+                y: spawnY,
+                direction: this.direction,
+                speed: this.config.projectileSpeed || 520,
+                damage: baseDmg,
+                baseDamageMultiplier: baseMult,
+                targetFaction: this.faction === FACTIONS.PLAYER ? FACTIONS.ENEMY : FACTIONS.PLAYER,
+                color: this.config.projectileColor || "#f97316",
+                radius: 8,
+                aoeRadius: this.config.aoeRadius || 0,
+                aoeImpactKind: this.config.aoeImpactKind || "",
+                assetId: this.config.projectileAssetId
+            }));
+            combatContext.notifyRangedShot();
+            return;
+        }
+
+        const finalDamage = isBase ? baseDmg * baseMult : baseDmg;
         target.takeDamage(finalDamage);
-        combatContext.spawnHitSpark(target.x, WORLD_CONFIG.GROUND_Y - target.height * 0.5, "#ef4444");
+        const splashRadius = this.config.aoeRadius || 0;
+        if (splashRadius > 0 && !isBase) {
+            const opponents = this.faction === FACTIONS.ENEMY ? combatContext.playerUnits : combatContext.enemyUnits;
+            for (let i = 0; i < opponents.length; i++) {
+                const other = opponents[i];
+                if (other !== target && other.isAlive() && Math.abs(other.x - target.x) <= splashRadius) {
+                    other.takeDamage(baseDmg);
+                }
+            }
+            combatContext.spawnAoeCloud(target.x, WORLD_CONFIG.GROUND_Y - 26, this.accentColor || "#f97316", splashRadius);
+        }
+        combatContext.spawnHitSpark(target.x, WORLD_CONFIG.GROUND_Y - target.height * 0.5, this.accentColor || "#ef4444");
         combatContext.notifyMeleeHit();
     }
 }
 
 /**
- * Ranged attacker spawning single-target or AoE projectiles (Mahasiswa, Polisi Gas Air Mata).
+ * Ranged attacker spawning config-driven single-target or AoE projectiles (Mahasiswa, Pers, Mural, Gas Air Mata, Tentara).
  */
 class RangedProjectileUnit extends Unit {
     performAttack(target, combatContext) {
         const spawnX = this.x + this.direction * (this.width * 0.45);
         const spawnY = WORLD_CONFIG.GROUND_Y - this.height * 0.65;
+        const projAssetId = this.config.projectileAssetId
+            || (this.config.aoeRadius > 0 ? ASSET_IDS.PROJ_TABUNG_GAS : ASSET_IDS.PROJ_KERIKIL);
         combatContext.spawnProjectile(new Projectile({
             x: spawnX,
             y: spawnY,
             direction: this.direction,
             speed: this.config.projectileSpeed,
-            damage: this.damage,
+            damage: this.getEffectiveDamage(),
+            baseDamageMultiplier: this.config.baseDamageMultiplier || 1.0,
             targetFaction: this.faction === FACTIONS.PLAYER ? FACTIONS.ENEMY : FACTIONS.PLAYER,
             color: this.config.projectileColor,
             radius: this.config.aoeRadius > 0 ? 7 : 5,
-            aoeRadius: this.config.aoeRadius || 0
+            aoeRadius: this.config.aoeRadius || 0,
+            aoeImpactKind: this.config.aoeImpactKind || "",
+            slowFactor: this.config.slowFactor || 1.0,
+            slowDuration: this.config.slowDuration || 0,
+            knockbackDistance: this.config.knockbackDistance || 0,
+            assetId: projAssetId
         }));
         combatContext.notifyRangedShot();
     }
@@ -281,20 +364,97 @@ class WaterCannonUnit extends Unit {
             y: spawnY,
             direction: this.direction,
             speed: this.config.projectileSpeed,
-            damage: this.damage,
+            damage: this.getEffectiveDamage(),
             targetFaction: FACTIONS.PLAYER,
             color: this.config.projectileColor,
             radius: 8,
             aoeRadius: this.config.aoeRadius,
             slowFactor: this.config.slowFactor,
             slowDuration: this.config.slowDuration,
-            knockbackDistance: this.config.knockbackDistance
+            knockbackDistance: this.config.knockbackDistance,
+            assetId: ASSET_IDS.PROJ_SEMBURAN_AIR
         }));
     }
 }
 
 /**
- * Stationary stage support unit that buffs all active player units for a fixed duration (Orator).
+ * Field healer staying behind the frontline to periodically restore AoE HP to wounded allies (Tim Medis).
+ */
+class HealerUnit extends Unit {
+    updateBehavior(dtEff, target, combatContext) {
+        if (!this.isAlive()) {
+            this.fsm.changeState("DEAD");
+            return;
+        }
+        const allies = combatContext.playerUnits;
+        let injuredAlly = null;
+        let frontMostAlly = null;
+
+        for (let i = 0; i < allies.length; i++) {
+            const ally = allies[i];
+            if (!ally.isAlive() || ally === this) continue;
+            const cfg = UNIT_CONFIGS[ally.key];
+            if (cfg && cfg.slotCategory === UNIT_SLOT_CATEGORIES.GLOBAL_BUFF) continue;
+
+            if (!frontMostAlly || ally.x > frontMostAlly.x) {
+                frontMostAlly = ally;
+            }
+            if (ally.hp < ally.maxHp && Math.abs(ally.x - this.x) <= this.range) {
+                injuredAlly = ally;
+            }
+        }
+
+        this._fsmContext.target = injuredAlly;
+        this._fsmContext.combatContext = combatContext;
+
+        if (injuredAlly) {
+            this.fsm.changeState("ATTACK");
+            this.fsm.update(dtEff);
+            return;
+        }
+
+        const safeStopX = frontMostAlly ? frontMostAlly.x - 75 : WORLD_CONFIG.PLAYER_BASE_X + 125;
+        if (this.x < safeStopX) {
+            this.fsm.changeState("WALK");
+            this.fsm.update(dtEff);
+        } else {
+            this.fsm.changeState("SUPPORT");
+        }
+    }
+
+    performAttack(_target, combatContext) {
+        const healRadius = this.config.aoeRadius || 110;
+        const healAmount = Math.max(1, this.getEffectiveDamage());
+        let healedCount = 0;
+
+        for (let i = 0; i < combatContext.playerUnits.length; i++) {
+            const ally = combatContext.playerUnits[i];
+            if (!ally.isAlive() || ally === this) continue;
+            const cfg = UNIT_CONFIGS[ally.key];
+            if (cfg && cfg.slotCategory === UNIT_SLOT_CATEGORIES.GLOBAL_BUFF) continue;
+            if (Math.abs(ally.x - this.x) <= healRadius && ally.hp < ally.maxHp) {
+                ally.heal(healAmount);
+                combatContext.spawnHitSpark(ally.x, WORLD_CONFIG.GROUND_Y - ally.height * 0.65, "#4ade80", 12);
+                healedCount++;
+            }
+        }
+
+        if (healedCount > 0) {
+            combatContext.spawnAoeCloud(this.x, WORLD_CONFIG.GROUND_Y - 26, "#22c55e", healRadius * 0.45);
+            combatContext.notifyHealPulse();
+        }
+    }
+
+    toTooltipData() {
+        const data = super.toTooltipData();
+        data.stats[0] = { label: "Heal AoE", value: `+${this.getEffectiveDamage()} HP (${this.config.aoeRadius} px)` };
+        return data;
+    }
+}
+
+/**
+ * Stationary stage support unit that applies configurable Global Buffs for a fixed duration
+ * (Orator Panggung, Dirigen Perkusi, Korlap Taktis).
  */
 class OratorUnit extends Unit {
     constructor(config, x) {
@@ -318,10 +478,29 @@ class OratorUnit extends Unit {
     }
 
     performAttack() {
-        // Orator supports from Panggung Utama without direct attacks
+        // Stage Global Buff units support from home base without direct attacks
     }
 
     toTooltipData() {
+        const stats = [];
+        if ((this.config.atkSpeedMultiplier || 1) > 1.001) {
+            stats.push({ label: "Buff Atk Speed", value: `+${Math.round((this.config.atkSpeedMultiplier - 1) * 100)}%` });
+        }
+        if ((this.config.damageMultiplier || 1) > 1.001) {
+            stats.push({ label: "Buff Damage", value: `+${Math.round((this.config.damageMultiplier - 1) * 100)}%` });
+        }
+        if ((this.config.damageTakenMultiplier || 1) < 0.999) {
+            stats.push({ label: "Kurangi DMG Masuk", value: `-${Math.round((1 - this.config.damageTakenMultiplier) * 100)}%` });
+        }
+        if ((this.config.moralRegenMultiplier || 1) > 1.001) {
+            stats.push({ label: "Buff Regen Moral", value: `+${Math.round((this.config.moralRegenMultiplier - 1) * 100)}%` });
+        }
+        if ((this.config.moveSpeedMultiplier || 1) > 1.001) {
+            stats.push({ label: "Buff Move Speed", value: `+${Math.round((this.config.moveSpeedMultiplier - 1) * 100)}%` });
+        }
+        stats.push({ label: "Jangkauan", value: "Seluruh Arena (Global)" });
+        stats.push({ label: "Sisa Durasi", value: `${this.remainingDuration.toFixed(1)}s` });
+
         return {
             title: this.name,
             subtitle: this.roleLabel,
@@ -330,12 +509,7 @@ class OratorUnit extends Unit {
             hpCurrent: Number(this.remainingDuration.toFixed(1)),
             hpMax: this.config.duration,
             hpUnitLabel: "dtk",
-            stats: [
-                { label: "Buff Atk Speed", value: `+${Math.round((this.config.atkSpeedMultiplier - 1) * 100)}%` },
-                { label: "Buff Speed", value: `+${Math.round((this.config.moveSpeedMultiplier - 1) * 100)}%` },
-                { label: "Jangkauan", value: "Seluruh Arena (Global)" },
-                { label: "Sisa Durasi", value: `${this.remainingDuration.toFixed(1)}s` }
-            ],
+            stats,
             note: this.description
         };
     }

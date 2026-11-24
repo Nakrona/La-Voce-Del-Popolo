@@ -12,6 +12,7 @@ class UnitFactory {
             RANGED: (cfg, x) => new RangedProjectileUnit(cfg, x),
             WATER_CANNON: (cfg, x) => new WaterCannonUnit(cfg, x),
             BOSS: (cfg, x) => new BossBarracudaUnit(cfg, x),
+            HEALER: (cfg, x) => new HealerUnit(cfg, x),
             ORATOR: (cfg, x) => new OratorUnit(cfg, x)
         };
     }

@@ -47,33 +47,75 @@ class TooltipDataBuilder {
         const cfg = UNIT_CONFIGS[unitKey];
         if (!cfg) return null;
 
-        let statusText = "SIAP BELI";
-        if (combatSystem && !combatSystem.canSpawnPlayerUnit(unitKey)) {
-            statusText = unitKey === "ORATOR" ? `MAKS ${cfg.maxStacks} AKTIF` : "POPULASI PENUH";
-        } else if (resourceManager) {
-            const cd = resourceManager._cooldowns.get(unitKey) || 0;
-            if (cd > 0) {
-                statusText = `CD ${cd.toFixed(1)}s`;
-            } else if (resourceManager.moral < cfg.cost) {
-                statusText = `BUTUH ${cfg.cost} MORAL`;
+        const isGlobalBuff = cfg.slotCategory === UNIT_SLOT_CATEGORIES.GLOBAL_BUFF;
+        const isHealer = cfg.behavior === "HEALER";
+
+        let statusText = cfg.shopPrice > 0 ? `${cfg.shopPrice} KOIN` : "UNIT AWAL";
+        if (combatSystem && combatSystem.playerBase) {
+            statusText = "SIAP BELI";
+            if (!combatSystem.canSpawnPlayerUnit(unitKey)) {
+                statusText = isGlobalBuff ? `MAKS ${cfg.maxStacks} AKTIF` : "POPULASI PENUH";
+            } else if (resourceManager) {
+                const cd = resourceManager._cooldowns.get(unitKey) || 0;
+                if (cd > 0) {
+                    statusText = `CD ${cd.toFixed(1)}s`;
+                } else if (resourceManager.moral < cfg.cost) {
+                    statusText = `BUTUH ${cfg.cost} MORAL`;
+                }
             }
         }
 
-        const isOrator = cfg.key === "ORATOR";
-        const stats = isOrator
-            ? [
+        let stats;
+        if (isGlobalBuff) {
+            stats = [
+                { label: "Kategori Slot", value: "Global Buff (Maks 1 Slot)" },
                 { label: "Biaya Moral", value: `${cfg.cost}` },
                 { label: "Cooldown", value: `${cfg.cooldown}s` },
-                { label: "Durasi Orasi", value: `${cfg.duration}s (Maks ${cfg.maxStacks})` },
-                { label: "Buff Global", value: `+${Math.round((cfg.atkSpeedMultiplier - 1) * 100)}% AtkSpd, +${Math.round((cfg.moveSpeedMultiplier - 1) * 100)}% Speed` }
-            ]
-            : [
+                { label: "Durasi Aksi", value: `${cfg.duration}s (Maks ${cfg.maxStacks})` }
+            ];
+            if ((cfg.atkSpeedMultiplier || 1) > 1.001) {
+                stats.push({ label: "Buff Atk Speed", value: `+${Math.round((cfg.atkSpeedMultiplier - 1) * 100)}%` });
+            }
+            if ((cfg.damageMultiplier || 1) > 1.001) {
+                stats.push({ label: "Buff Damage", value: `+${Math.round((cfg.damageMultiplier - 1) * 100)}%` });
+            }
+            if ((cfg.damageTakenMultiplier || 1) < 0.999) {
+                stats.push({ label: "Kurangi DMG Masuk", value: `-${Math.round((1 - cfg.damageTakenMultiplier) * 100)}%` });
+            }
+            if ((cfg.moralRegenMultiplier || 1) > 1.001) {
+                stats.push({ label: "Buff Regen Moral", value: `+${Math.round((cfg.moralRegenMultiplier - 1) * 100)}%` });
+            }
+            if ((cfg.moveSpeedMultiplier || 1) > 1.001) {
+                stats.push({ label: "Buff Speed", value: `+${Math.round((cfg.moveSpeedMultiplier - 1) * 100)}%` });
+            }
+        } else if (isHealer) {
+            stats = [
+                { label: "Kategori Slot", value: "Unit Biasa (3 Slot)" },
+                { label: "Biaya Moral", value: `${cfg.cost}` },
+                { label: "HP / Heal AoE", value: `${cfg.maxHp} HP / +${cfg.damage} HP` },
+                { label: "Radius & Interval", value: `${cfg.aoeRadius} px / ${cfg.attackInterval}s` },
+                { label: "Jarak / Speed", value: `${cfg.range} px / ${cfg.speed} px/s` },
+                { label: "Cooldown Spawn", value: `${cfg.cooldown}s` }
+            ];
+        } else {
+            stats = [
+                { label: "Kategori Slot", value: "Unit Biasa (3 Slot)" },
                 { label: "Biaya Moral", value: `${cfg.cost}` },
                 { label: "HP / Damage", value: `${cfg.maxHp} HP / ${cfg.damage} DMG` },
                 { label: "Interval Serang", value: `${cfg.attackInterval}s` },
                 { label: "Jarak / Speed", value: `${cfg.range} px / ${cfg.speed} px/s` },
                 { label: "Cooldown Spawn", value: `${cfg.cooldown}s` }
             ];
+            if (cfg.aoeRadius > 0) {
+                stats.push({ label: "Area Ledakan", value: `AoE ${cfg.aoeRadius} px` });
+            }
+            if (cfg.slowDuration > 0) {
+                stats.push({ label: "Efek Tambahan", value: `Slow -${Math.round((1 - cfg.slowFactor) * 100)}% (${cfg.slowDuration}s)` });
+            }
+            if (cfg.knockbackResistance > 0) {
+                stats.push({ label: "Tahan Knockback", value: `${Math.round(cfg.knockbackResistance * 100)}%` });
+            }
+        }
 
         return {
             title: cfg.name,
@@ -319,6 +361,7 @@ class TooltipController {
         const unitBtns = document.querySelectorAll(".unit-btn");
         for (const btn of unitBtns) {
             btn.addEventListener("mouseenter", (e) => {
+                if (!btn.dataset.unit) return;
                 this.clientX = e.clientX;
                 this.clientY = e.clientY;
                 this.fsm.changeState("HOVER_SHOP", { type: "UNIT", key: btn.dataset.unit });
@@ -328,6 +371,29 @@ class TooltipController {
                 this.clientY = e.clientY;
             });
             btn.addEventListener("mouseleave", () => {
+                if (this.fsm.isIn("HOVER_SHOP")) this.fsm.changeState("HIDDEN");
+            });
+        }
+
+        const shopScreenEl = document.getElementById("shop-screen");
+        if (shopScreenEl) {
+            shopScreenEl.addEventListener("mouseover", (e) => {
+                const target = e.target && e.target.closest ? e.target.closest("[data-tooltip-unit]") : null;
+                if (target && target.dataset && target.dataset.tooltipUnit) {
+                    this.clientX = e.clientX;
+                    this.clientY = e.clientY;
+                    this.fsm.changeState("HOVER_SHOP", { type: "UNIT", key: target.dataset.tooltipUnit });
+                } else if (this.fsm.isIn("HOVER_SHOP")) {
+                    this.fsm.changeState("HIDDEN");
+                }
+            });
+            shopScreenEl.addEventListener("mousemove", (e) => {
+                if (this.fsm.isIn("HOVER_SHOP")) {
+                    this.clientX = e.clientX;
+                    this.clientY = e.clientY;
+                }
+            });
+            shopScreenEl.addEventListener("mouseleave", () => {
                 if (this.fsm.isIn("HOVER_SHOP")) this.fsm.changeState("HIDDEN");
             });
         }
