@@ -1,0 +1,23 @@
+LA VOCE DEL POPOLO
+- bgm_menu.mp3- bgm_battle.mp3 : 
+- bgm_battle2.mp3 : 
+- amb_crowd.ogg : 
+- sfx_ui_click.wav : 
+- sfx_spawn.ogg : 
+- sfx_orator.ogg :
+- sfx_teargas.ogg :
+- sfx_barracuda.mp3 :
+- sfx_petasan.mp3 :
+- sfx_victory.mp3 :
+- sfx_gameover.mp3 :
+- sfx_hit_melee.ogg (impact.1.ogg) :
+- sfx_water_cannon.ogg (splash_01.ogg) :
+- sfx_throw.wav (swishes/swish-1.wav) :
+- sfx_shop_buy.wav :
+- sfx_shop_equip.wav :
+- sfx_shop_unequip.wav :
+- sfx_shop_error.wav :
+- sfx_heal.wav :
+- sfx_buff_drum.wav : 
+- sfx_buff_radio.wav :
+- sfx_sonic.wav : 
